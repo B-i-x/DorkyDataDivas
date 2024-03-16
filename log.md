@@ -9,7 +9,12 @@
 
 1. proof of concept works
 
+gui look is inspired by apple
+colors are pastel
+
 **Division  of Labor**
 
 - Michael can use his previous code to call the Gemini API.
+
+- we need to make color palette class to store colors
 

@@ -44,7 +44,7 @@ def draw_grid(grid):
                 pygame.draw.rect(screen, blue, rect)
             else:
                 pygame.draw.rect(screen, white, rect, 1)
-            text = font.render(letter.upper(), True, white)
+            text = font.render(letter.lower(), True, white)
             screen.blit(text, rect.topleft + pygame.Vector2(10, 5))
 
 def draw_words(words):
