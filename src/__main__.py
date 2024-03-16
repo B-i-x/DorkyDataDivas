@@ -5,6 +5,7 @@ from word_search_generator import WordSearch
 import math
 
 from util.colors import Color
+from gemini.ai import words_related_to_theme
 
 # Initialize Pygame
 pygame.init()
@@ -18,8 +19,8 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("Word Search Game")
 
 # Puzzle data
-words = ["python", "java", "kotlin", "swift", "javascript"]
-words = ", ".join(words)
+words = words_related_to_theme("programming")
+
 puzzle_data = WordSearch(words, size=10).json
 puzzle_data = json.loads(puzzle_data)
 
