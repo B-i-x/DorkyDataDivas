@@ -2,7 +2,7 @@ import pygame
 import sys
 import json
 from word_search_generator import WordSearch
-
+import math
 # Initialize Pygame
 pygame.init()
 
@@ -22,7 +22,10 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("Word Search Game")
 
 # Puzzle data (Assuming this is the JSON you've provided)
-puzzle_data = WordSearch("test, asdasd, pip").json
+words = ["python", "java", "kotlin", "swift", "javascript"]
+words = ", ".join(words)# print(len(input_letters))
+# print(matrix_size)
+puzzle_data = WordSearch(words, size=10).json
 puzzle_data = json.loads(puzzle_data)
 # print(type(puzzle_data))
 
