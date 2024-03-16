@@ -20,19 +20,22 @@ pygame.display.set_caption("Word Search Game")
 
 # Puzzle data
 words = words_related_to_theme("programming")
-
-puzzle_data = WordSearch(words, size=10).json
+puzzle_data = WordSearch(words, size=6).json
+print(puzzle_data)
 puzzle_data = json.loads(puzzle_data)
 
 # Extract puzzle grid and words
 grid = puzzle_data['puzzle']
 words = puzzle_data['words']
-
+print(words)
 # Font for rendering text
 font = pygame.font.Font(None, 36)
 
-# List to keep track of selected cells
-selected_cells = []
+# Keep track of the start cell, end cell, and if we're currently selecting
+start_cell = None
+end_cell = None
+selecting = False
+final_selected_cells = []
 
 # Function to draw the grid
 def draw_grid(grid, hover_cell):
@@ -54,7 +57,7 @@ def draw_grid(grid, hover_cell):
 # Function to draw the words list
 def draw_words(words):
     start_x = 600
-    start_y = 100
+    start_y = 50
     for word in words:
         text = font.render(word, True, Color.RED.value)
         screen.blit(text, (start_x, start_y))
@@ -69,26 +72,55 @@ def get_cell_from_mouse_pos(pos):
         return (row, col)
     return None
 
+def compute_path(start_cell, end_cell):
+    if not start_cell or not end_cell:
+        return []
+    path = []
+    delta_row = end_cell[0] - start_cell[0]
+    delta_col = end_cell[1] - start_cell[1]
+    step_row = delta_row // max(abs(delta_row), 1)
+    step_col = delta_col // max(abs(delta_col), 1)
+    
+    for i in range(max(abs(delta_row), abs(delta_col)) + 1):
+        path.append((start_cell[0] + i * step_row, start_cell[1] + i * step_col))
+    return path
+
+def is_valid_word(path):
+    word = ''.join(grid[y][x] for y, x in path).lower()
+    return word in words
+
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            # Add clicked cell to selected cells list
-            cell = get_cell_from_mouse_pos(pygame.mouse.get_pos())
-            if cell and cell not in selected_cells:
-                selected_cells.append(cell)
+            if not selecting:
+                # Start selection
+                start_cell = get_cell_from_mouse_pos(pygame.mouse.get_pos())
+                selecting = True
+                final_selected_cells.clear()
+            else:
+                # Finalize selection
+                if is_valid_word(final_selected_cells):
+                    print('Valid word selected:', ''.join(grid[y][x] for y, x in final_selected_cells))
+                selecting = False
+                start_cell = None
 
-    # Get current hover cell
-    hover_cell = get_cell_from_mouse_pos(pygame.mouse.get_pos())
+    current_hover_cell = get_cell_from_mouse_pos(pygame.mouse.get_pos())
+    if selecting and start_cell and current_hover_cell:
+        end_cell = current_hover_cell
+        selected_cells = compute_path(start_cell, end_cell)
+        if is_valid_word(selected_cells):
+            final_selected_cells = list(selected_cells)
+        else:
+            final_selected_cells.clear()
+    else:
+        selected_cells = []
 
     screen.fill(Color.WHITE.value)
-
-    # Draw the word search grid and words list
-    draw_grid(grid, hover_cell)
+    draw_grid(grid, selected_cells)
     draw_words(words)
-
     pygame.display.flip()
 
 pygame.quit()

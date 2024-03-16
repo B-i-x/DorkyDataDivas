@@ -1,6 +1,6 @@
 
 def words_related_to_theme(theme: str) -> str:
-    words_in_array_form = ["python", "java", "kotlin", "swift", "javascript"]
+    words_in_array_form = ["python", "java", "kotlin", "script"]
 
     return format_word_array(words_in_array_form)
 
