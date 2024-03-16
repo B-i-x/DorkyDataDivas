@@ -34,5 +34,12 @@ Vai
 
 - cursor snapping to grid center
 
+** Time: 3-15 9:15PM
+
+trying to find optimal grid size to minimize word search matrix
+
+made highlightable
+
+m1 chips :(
 
 
