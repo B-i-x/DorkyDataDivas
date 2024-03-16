@@ -1,13 +1,14 @@
-def calculate_minimum_grid_size(words):
-    # Initial grid size is set to the length of the longest word to ensure it fits in at least one direction
-    size = max(len(word) for word in words)
-    
+def calculate_minimum_grid_size_with_buffer(words, buffer_factor=1.2):
+    # Start with a base size estimate based on the longest word and total letter count
+    base_size = max(len(max(words, key=len)), int((sum(len(word) for word in words) ** 0.5)))
+    # Apply a buffer to the estimated size to account for placement inefficiencies
+    adjusted_size = int(base_size * buffer_factor)
+
     while True:
-        # Attempt to create a puzzle with the current size
-        puzzle, success = try_create_puzzle(words, size)
+        puzzle, success = try_create_puzzle(words, adjusted_size)
         if success:
-            return size  # If successful, the current size is sufficient
-        size += 1  # Otherwise, increment the size and try again
+            return adjusted_size  # If successful, the current size with buffer is sufficient
+        adjusted_size += 1  # If not, increment the size and try again
 
 def try_create_puzzle(words, size):
     # Initialize an empty grid
@@ -45,7 +46,7 @@ def place_word(word, grid, row, col, direction):
         new_col = col + i * direction[1]
         grid[new_row][new_col] = word[i]
 
-# Example usage
-words = ["python", "kotlin", "java", "script"]
-minimum_grid_size = calculate_minimum_grid_size(words)
-print(f"Minimum grid size: {minimum_grid_size}")
+# Example usage with a buffer factor
+words = ["example", "word", "search", "puzzle", "generation"]
+minimum_grid_size = calculate_minimum_grid_size_with_buffer(words)
+print(f"Minimum grid size with buffer: {minimum_grid_size}")
