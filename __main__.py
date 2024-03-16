@@ -50,8 +50,11 @@ def draw_grid(grid, hover_cell):
                 pygame.draw.rect(screen, Color.BLUE.value, rect)
             else:
                 pygame.draw.rect(screen, Color.GREY.value, rect, 1)
-            text = font.render(letter.lower(), True, Color.WHITE.value if hover_cell == (y, x) else Color.BLACK.value)
-            screen.blit(text, rect.topleft + pygame.Vector2(10, 5))
+            text_surface = font.render(letter.lower(), True, Color.WHITE.value if hover_cell == (y, x) else Color.BLACK.value)
+            # Calculate text position to center it in the cell
+            text_rect = text_surface.get_rect(center=rect.center)
+            screen.blit(text_surface, text_rect)
+
 
 # Function to draw the words list
 def draw_words(words):
