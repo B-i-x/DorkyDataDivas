@@ -6,7 +6,7 @@ import math
 
 from util.colors import Color
 from gemini.ai import words_related_to_theme
-
+from algo.greedy import calculate_minimum_grid_size_with_buffer
 # Initialize Pygame
 pygame.init()
 
@@ -20,7 +20,7 @@ pygame.display.set_caption("Word Search Game")
 
 # Puzzle data
 words = words_related_to_theme("programming")
-puzzle_data = WordSearch(words, size=25).json
+puzzle_data = WordSearch(words, size=calculate_minimum_grid_size_with_buffer(words=words)).json
 # print(puzzle_data)
 puzzle_data = json.loads(puzzle_data)
 

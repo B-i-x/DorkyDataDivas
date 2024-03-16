@@ -9,7 +9,7 @@ sys.path.append(src_dir)
 
 # Now you should be able to import the algo package and its modules
 from src.algo.greedy import calculate_minimum_grid_size_with_buffer
-from src.algo.lazy import calculate_minimum_grid_size_with_buffer
+# from src.algo.lazy import calculate_minimum_grid_size_with_buffer
 
 import json
 from word_search_generator import WordSearch
@@ -31,7 +31,7 @@ def test_word_search(words, max_grid_size=20):
     
     # for size in range(5, max_grid_size + 1):
         # Calculate minimum grid size with a buffer
-    size = calculate_minimum_grid_size_with_buffer(words=words)
+    size = calculate_minimum_grid_size_with_buffer(words=words) + 3
     
     # Generate puzzle with the calculated grid size
     puzzle_data = WordSearch(", ".join(words), size=size).json
@@ -54,7 +54,7 @@ def test_word_search(words, max_grid_size=20):
 for i in range(5, 25):
     print(f"Test {i}:")
     words = generate_random_words(i, length=5)
-    print("Generated words:", words)
+    # print("Generated words:", words)
 
     test_word_search(words)
 # words = generate_random_words(n_words, length=5)
