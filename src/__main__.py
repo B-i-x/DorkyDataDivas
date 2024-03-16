@@ -51,12 +51,15 @@ strikethrough = False
 selected_word = ''
 strikethrough_word_indices = []
 
+
 def get_font(size): # Returns Press-Start-2P in the desired size
     return pygame.font.Font("assets/font.ttf", size)
+
 
 # Display the heading
 HEAD_TEXT = get_font(20).render("Generative Word Search", True, '#9B56E3')
 HEAD_TEXT_RECT = HEAD_TEXT.get_rect(center=(350, 100))
+
 
 def draw_grid(grid, hover_cell):
 
@@ -121,6 +124,7 @@ def get_cell_from_mouse_pos(pos, grid_init_x, grid_init_y):
         return (int(col), int(row))
     return None
 
+
 def compute_path(start_cell, end_cell):
     if not start_cell or not end_cell:
         return []
@@ -134,33 +138,15 @@ def compute_path(start_cell, end_cell):
         path.append((start_cell[0] + i * step_row, start_cell[1] + i * step_col))
     return path
 
+
 def is_valid_word(path):
     selected_word = ''.join(grid[y][x] for y, x in path).lower()
     searchable_words = [word.lower() for word in words]
     print(selected_word, searchable_words)
     return selected_word in searchable_words
 
-def get_word_position_from_list():
-    x, y = BLOCK_SIZE + 570, BLOCK_SIZE + 175
-
-    return (x, y)
-
-def draw_text_with_strikethrough(text):
-    for word in words:
-        if text == word.lower():
-            position = get_word_position_from_list()
-            # Render the text
-            text_surface = font.render(text, True, Color.BLACK.value)
-            text_rect = text_surface.get_rect()
-            text_rect.topleft = position
-            # Calculate the position of the line for strikethrough effect
-            line_y = text_rect.centery
-            # Draw the text
-            screen.blit(text_surface, text_rect)
-            # Draw the strikethrough line
-            pygame.draw.line(screen, Color.BLACK.value, (text_rect.left, line_y), (text_rect.right, line_y), 2)
-
 # def game_over():
+
 
 running = True
 while running:
