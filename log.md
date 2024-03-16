@@ -46,5 +46,11 @@ m1 chips :(
 
 greedy algo works
 
+## Time: 3-15 11:00PM
+
+greedy algo is tested and it is good starter point
+you can now actually select whole words in the gui
+the ai convo at the beginning works beautifully
+
 
 
