@@ -33,7 +33,7 @@ grid = puzzle_data['puzzle']
 words = puzzle_data['words']
 # print(words)
 # Font for rendering text
-font = pygame.font.Font(None, 36)
+font = pygame.font.Font("assets/AovelSansRounded-rdDL.ttf", 36)
 
 # Keep track of the start cell, end cell, and if we're currently selecting
 start_cell = None
@@ -47,11 +47,14 @@ window_width, window_height = surface.get_width(), surface.get_height()  # creat
 BLOCK_SIZE = 40  # Size of grid block
 grid_init_x = window_width / 4  # set the initial x position of the grid
 grid_init_y = window_height / 4  # set the initial y position of the grid
+strikethrough = False
+selected_word = ''
+strikethrough_word_indices = []
 
 def get_font(size): # Returns Press-Start-2P in the desired size
     return pygame.font.Font("assets/font.ttf", size)
 
-
+# Display the heading
 HEAD_TEXT = get_font(20).render("Generative Word Search", True, '#9B56E3')
 HEAD_TEXT_RECT = HEAD_TEXT.get_rect(center=(350, 100))
 
@@ -73,21 +76,41 @@ def draw_grid(grid, hover_cell):
             text_rect = text_surface.get_rect(center=rect.center)
             screen.blit(text_surface, text_rect)
 
+
 def add_rect(start_x, start_y):
     pygame.draw.rect(screen, Color.BLACK.value, pygame.Rect(start_x, start_y, 200, 200), 2)
 
-def add_text(words, start_x, start_y):
-    for word in words:
-        text = font.render(word, True, Color.RED.value)
-        screen.blit(text, (start_x + 50, start_y + 25))
+
+def add_text(words, start_x, start_y, strikethrough, selected_word):
+
+    for idx, word in enumerate(words):
+        if (strikethrough and word.lower() == selected_word) or (idx in strikethrough_word_indices):
+            if idx not in strikethrough_word_indices:
+                strikethrough_word_indices.append(idx)
+            text_surface = font.render(word, True, Color.BLACK.value)
+            text_rect = text_surface.get_rect()
+            text_rect.topleft = (start_x + 50, start_y + 25)
+            # Calculate the position of the line for strikethrough effect
+            line_y = text_rect.centery
+            # Draw the text
+            screen.blit(text_surface, text_rect)
+            # Draw the strikethrough line
+            pygame.draw.line(screen, Color.BLACK.value, (text_rect.left, line_y), (text_rect.right, line_y), 2)
+        else:
+            text = font.render(word, True, Color.RED.value)
+            screen.blit(text, (start_x + 50, start_y + 25))
+
         start_y += 40
 
+
 # Function to draw the words list
-def draw_words(words, block_size):
-    start_x = block_size + 520
-    start_y = block_size + 150
+def draw_words(words, strikethrough, selected_word):
+    start_x = BLOCK_SIZE + 520
+    start_y = BLOCK_SIZE + 150
+
     add_rect(start_x, start_y)
-    add_text(words, start_x, start_y)
+    add_text(words, start_x, start_y, strikethrough, selected_word)
+
 
 # Function to get cell from mouse position
 def get_cell_from_mouse_pos(pos, grid_init_x, grid_init_y):
@@ -117,12 +140,35 @@ def is_valid_word(path):
     print(selected_word, searchable_words)
     return selected_word in searchable_words
 
+def get_word_position_from_list():
+    x, y = BLOCK_SIZE + 570, BLOCK_SIZE + 175
+
+    return (x, y)
+
+def draw_text_with_strikethrough(text):
+    for word in words:
+        if text == word.lower():
+            position = get_word_position_from_list()
+            # Render the text
+            text_surface = font.render(text, True, Color.BLACK.value)
+            text_rect = text_surface.get_rect()
+            text_rect.topleft = position
+            # Calculate the position of the line for strikethrough effect
+            line_y = text_rect.centery
+            # Draw the text
+            screen.blit(text_surface, text_rect)
+            # Draw the strikethrough line
+            pygame.draw.line(screen, Color.BLACK.value, (text_rect.left, line_y), (text_rect.right, line_y), 2)
+
+# def game_over():
+
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
+            strikthrough = False
             if not selecting:
                 # Start selection
                 start_cell = get_cell_from_mouse_pos(pygame.mouse.get_pos(), grid_init_x, grid_init_y)
@@ -148,6 +194,8 @@ while running:
             # print(is_valid_word(selected_cells))
             if is_valid_word(selected_cells):
                 final_selected_cells = list(selected_cells)
+                selected_word = ''.join(grid[y][x] for y, x in selected_cells).lower()
+                strikethrough = True
             else:
                 final_selected_cells.clear()
             print(selected_cells)
@@ -157,10 +205,10 @@ while running:
     else:
         selected_cells = []  # Clear temporary selection path when not selecting
 
-    screen.fill(Color.WHITE.value)
+    screen.fill((151, 161, 219))
     screen.blit(HEAD_TEXT, HEAD_TEXT_RECT)
     draw_grid(grid, selected_cells)  # Pass the temporary path for visualization
-    draw_words(words, BLOCK_SIZE)
+    draw_words(words, strikethrough, selected_word)
     pygame.display.flip()
 
 pygame.quit()
