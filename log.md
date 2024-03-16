@@ -42,4 +42,9 @@ made highlightable
 
 m1 chips :(
 
+** Time: 3-15 9:45PM
+
+greedy algo works
+
+
 
