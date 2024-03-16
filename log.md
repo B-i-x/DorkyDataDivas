@@ -1,11 +1,11 @@
-## Brainstorming Thoughts for Different Games
-**Time: 3-15 4:30PM**
+## Time: 3-15 4:30PM
+**Brainstorming Thoughts for Different Games**
 
 - win
 - win
 - win
 
-## Division of Labor
-**Time: 3-15 7:15PM**
+## Time: 3-15 7:15PM
+**Division  of Labor**
 
 - Michael can use his previous code to call the Gemini API.
