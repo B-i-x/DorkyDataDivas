@@ -20,7 +20,7 @@ pygame.display.set_caption("Word Search Game")
 
 # Puzzle data
 words = words_related_to_theme("programming")
-puzzle_data = WordSearch(words, size=6).json
+puzzle_data = WordSearch(words, size=7).json
 # print(puzzle_data)
 puzzle_data = json.loads(puzzle_data)
 

@@ -47,6 +47,7 @@ def place_word(word, grid, row, col, direction):
         grid[new_row][new_col] = word[i]
 
 # Example usage with a buffer factor
-words = ["example", "word", "search", "puzzle", "generation"]
+words =  ["python", "java", "kotlin", "script"]
+
 minimum_grid_size = calculate_minimum_grid_size_with_buffer(words)
 print(f"Minimum grid size with buffer: {minimum_grid_size}")
