@@ -12,9 +12,27 @@
 gui look is inspired by apple
 colors are pastel
 
+multiplayer version after single players
+
+only highlight cells if selection is valid
+use invisible line from cell to cell to tell user selection
 **Division  of Labor**
 
-- Michael can use his previous code to call the Gemini API.
+Michael 
 
-- we need to make color palette class to store colors
+- gemini api for theme
+
+- make nice colors class and palette, overall asthetics
+
+- cursur stuff
+
+Alex
+
+- multiplayer part research
+
+Vai
+
+- cursor snapping to grid center
+
+
 

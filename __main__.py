@@ -13,6 +13,7 @@ screen_height = 800
 # Colors
 black = (0, 0, 0)
 white = (255, 255, 255)
+grey = (128, 128, 128)
 red = (255, 0, 0)
 blue = (0, 0, 255)  # Color for highlighting selected cell
 
@@ -32,21 +33,22 @@ words = puzzle_data['words']
 # Font for rendering text
 font = pygame.font.Font(None, 36)
 # Variables for selected cell
-selected_cell = None  # Stores (row, col) of selected cell
 
-def draw_grid(grid):
+# Function to draw the grid
+def draw_grid(grid, hover_cell):
     block_size = 40  # Size of grid block
     for y, row in enumerate(grid):
         for x, letter in enumerate(row):
             rect = pygame.Rect(x * block_size, y * block_size, block_size, block_size)
-            # Highlight cell if selected
-            if selected_cell == (y, x):
+            # Highlight cell if hovered over
+            if hover_cell == (y, x):
                 pygame.draw.rect(screen, blue, rect)
             else:
-                pygame.draw.rect(screen, white, rect, 1)
-            text = font.render(letter.lower(), True, white)
+                pygame.draw.rect(screen, grey, rect, 1)
+            text = font.render(letter.lower(), True, white if hover_cell == (y, x) else black)
             screen.blit(text, rect.topleft + pygame.Vector2(10, 5))
 
+# Function to draw the words list
 def draw_words(words):
     start_x = 600  # Starting X position for the words list
     start_y = 100  # Starting Y position for the words list
@@ -55,6 +57,7 @@ def draw_words(words):
         screen.blit(text, (start_x, start_y))
         start_y += 40  # Move down for the next word
 
+# Function to get cell from mouse position
 def get_cell_from_mouse_pos(pos):
     x, y = pos
     row = y // 40  # Assuming block_size = 40
@@ -68,14 +71,14 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            pos = pygame.mouse.get_pos()
-            selected_cell = get_cell_from_mouse_pos(pos)
 
-    screen.fill(black)
+    # Update hover cell based on mouse position
+    hover_cell = get_cell_from_mouse_pos(pygame.mouse.get_pos())
 
-    # Draw the word search grid
-    draw_grid(grid)
+    screen.fill(white)
+
+    # Draw the word search grid with the current hover cell
+    draw_grid(grid, hover_cell)
     # Draw the words list
     draw_words(words)
 
