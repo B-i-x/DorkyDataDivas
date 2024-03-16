@@ -3,6 +3,8 @@ import sys
 import json
 from word_search_generator import WordSearch
 import math
+
+from util.colors import Color
 # Initialize Pygame
 pygame.init()
 
@@ -10,12 +12,12 @@ pygame.init()
 screen_width = 1200
 screen_height = 800
 
-# Colors
-black = (0, 0, 0)
-white = (255, 255, 255)
-grey = (128, 128, 128)
-red = (255, 0, 0)
-blue = (0, 0, 255)  # Color for highlighting selected cell
+# # Colors
+# black = (0, 0, 0)
+# white = (255, 255, 255)
+# grey = (128, 128, 128)
+# red = (255, 0, 0)
+# blue = (0, 0, 255)  # Color for highlighting selected cell
 
 # Set up the display
 screen = pygame.display.set_mode((screen_width, screen_height))
@@ -45,10 +47,10 @@ def draw_grid(grid, hover_cell):
             rect = pygame.Rect(x * block_size, y * block_size, block_size, block_size)
             # Highlight cell if hovered over
             if hover_cell == (y, x):
-                pygame.draw.rect(screen, blue, rect)
+                pygame.draw.rect(screen, Color.BLUE.value, rect)
             else:
-                pygame.draw.rect(screen, grey, rect, 1)
-            text = font.render(letter.lower(), True, white if hover_cell == (y, x) else black)
+                pygame.draw.rect(screen, Color.GREY.value, rect, 1)
+            text = font.render(letter.lower(), True, Color.WHITE.value if hover_cell == (y, x) else Color.BLACK.value)
             screen.blit(text, rect.topleft + pygame.Vector2(10, 5))
 
 # Function to draw the words list
@@ -56,7 +58,7 @@ def draw_words(words):
     start_x = 600  # Starting X position for the words list
     start_y = 100  # Starting Y position for the words list
     for word in words:
-        text = font.render(word, True, red)
+        text = font.render(word, True, Color.RED.value)
         screen.blit(text, (start_x, start_y))
         start_y += 40  # Move down for the next word
 
@@ -78,7 +80,7 @@ while running:
     # Update hover cell based on mouse position
     hover_cell = get_cell_from_mouse_pos(pygame.mouse.get_pos())
 
-    screen.fill(white)
+    screen.fill(Color.WHITE.value)
 
     # Draw the word search grid with the current hover cell
     draw_grid(grid, hover_cell)
