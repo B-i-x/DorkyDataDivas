@@ -1,57 +1,50 @@
-import random
+from word_search_generator import WordSearch
+import json
 
-def can_place_word(word, grid, row, col, direction, size):
-    for i in range(len(word)):
-        new_row = row + i * direction[0]
-        new_col = col + i * direction[1]
-        if new_row >= size or new_col >= size or new_row < 0 or new_col < 0:
-            return False  # Out of bounds
-        if grid[new_row][new_col] != '' and grid[new_row][new_col] != word[i]:
-            return False  # Conflict
-    return True
-
-def place_word(word, grid, row, col, direction):
-    for i in range(len(word)):
-        new_row = row + i * direction[0]
-        new_col = col + i * direction[1]
-        grid[new_row][new_col] = word[i]
-        
 def calculate_minimum_grid_size_with_buffer(words, buffer_factor=1.2):
+    uppercase_words = [word.upper() for word in words]
+
+    # Start with a base size estimate based on the longest word and total letter count
     base_size = max(len(max(words, key=len)), int((sum(len(word) for word in words) ** 0.5)))
+    # Apply a buffer to the estimated size to account for placement inefficiencies
     adjusted_size = int(base_size * buffer_factor)
     
-    words_sorted = sorted(words, key=len, reverse=True)  # Sort words by length in descending order for better packing
+    if (adjusted_size < 5):
+        adjusted_size = 5
+    # print(adjusted_size)
     while True:
-        grid = [['' for _ in range(adjusted_size)] for _ in range(adjusted_size)]
-        if try_place_words(grid, words_sorted, 0):
+        # # Use WordSearch to generate the puzzle
+        # puzzle_data = WordSearch(words, size=adjusted_size).json
+        # puzzle_data = json.loads(puzzle_data)
+
+        # # Check if WordSearch placed all the words
+        # placed_words = set(word.upper() for word in puzzle_data['words'])
+        # all_words_placed = all(word.upper() in placed_words for word in words)
+        # # print(placed_words, all_words_placed)
+        # if all_words_placed:
+        #     return adjusted_size  # If successful, the current size with buffer is sufficient
+        # else:
+        #     # If not, increment the size and try again
+        #     adjusted_size += 1  
+
+        puzzle_data = WordSearch(", ".join(words), size=adjusted_size).json
+        puzzle_data = json.loads(puzzle_data)
+        output_words = puzzle_data['words']
+
+        # Check if all uppercase generated words are in the output
+        if all(word in output_words for word in uppercase_words):
+            print(f"Minimum grid size : {adjusted_size}")
+
             return adjusted_size
-        adjusted_size += 1
+        else:
+            adjusted_size += 1  
 
-def try_place_words(grid, words, index):
-    if index == len(words):
-        return True
 
-    word = words[index]
-    for direction in [(0, 1), (1, 0), (1, 1), (-1, 1)]:
-        for row in range(len(grid)):
-            for col in range(len(grid[0])):
-                if can_place_word(word, grid, row, col, direction, len(grid)):
-                    place_word(word, grid, row, col, direction)
-                    if try_place_words(grid, words, index + 1):
-                        return True
-                    remove_word(word, grid, row, col, direction)
-    return False
-
-def remove_word(word, grid, row, col, direction):
-    for i in range(len(word)):
-        new_row = row + i * direction[0]
-        new_col = col + i * direction[1]
-        grid[new_row][new_col] = ''
-
-# can_place_word and place_word functions remain the same.
-
+# Assuming that the run function is part of the same module that contains the 
+# calculate_minimum_grid_size_with_buffer function.
 def run():
-    words = ["python", "java", "kotlin", "script"]  # Example word list
+    # Example usage with a buffer factor
+    words = ["python", "java", "kotlin", "script"]
     minimum_grid_size = calculate_minimum_grid_size_with_buffer(words)
     print(f"Minimum grid size with buffer: {minimum_grid_size}")
 
