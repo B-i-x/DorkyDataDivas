@@ -9,3 +9,5 @@
 **Division  of Labor**
 
 - Michael can use his previous code to call the Gemini API.
+
+1. proof of concept works
