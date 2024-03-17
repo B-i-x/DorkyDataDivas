@@ -62,5 +62,13 @@ palette works
 ai screen is making progress
 vai 's exit screen looks good
 
+## Time 3-17 1:00AM
+
+sounds are in the game
+word search game is basically done
+ai part is still in the works
+fireoworks are being added
+can successfully close out the game now
+
 
 
