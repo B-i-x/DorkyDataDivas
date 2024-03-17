@@ -1,5 +1,10 @@
+#Fix it saying it is a multimodal ai model
+#include other fun responses
+
 import pygame
 import textwrap
+import time
+import re
 import google.generativeai as genai
 
 # Initialize Pygame
@@ -15,7 +20,19 @@ black = (0, 0, 0)
 light_blue = (220, 240, 255)  # User message color
 gray = (128, 128, 128)  # Gemini model response color
 input_box_color = (230, 230, 230)  # Input box color
+send_button_color = (100, 180, 100)  # Send button color
 font = pygame.font.Font(None, 24)
+
+# Input box and send button setup
+input_box = pygame.Rect(10, screen_height - 50, screen_width - 80, 40)
+send_button = pygame.Rect(screen_width - 60, screen_height - 50, 50, 40)  # Send button next to input box
+input_text = ''
+active = True  # Input box is initially active
+cursor_visible = True  # Cursor visibility state
+last_cursor_blink_time = time.time()
+
+scroll_y = 0  # This will keep track of the vertical scroll position
+max_message_height = screen_height - 150  # Maximum height for displaying messages above the input box
 
 # Configure the API
 genai.configure(api_key="AIzaSyCqoLt9Mxq3KHB3Pwdmuy0OQJlpQ_g98_4")
@@ -65,44 +82,98 @@ active = True  # Input box is initially active
 
 convo_history = []  # List to hold conversation history
 
-def draw_message_bubble(text, x, y, width, is_user_message):
-    color = light_blue if is_user_message else gray
-    wrapped_text = textwrap.wrap(text, width=width // font.size(' ')[0])
-    bubble_height = sum(font.size(line)[1] for line in wrapped_text) + 20
-
-    bubble_x = screen_width - width - 10 if is_user_message else 10
-    pygame.draw.rect(screen, color, (bubble_x, y, width, bubble_height), border_radius=20)
-
-    y_offset = 10
-    for line in wrapped_text:
-        line_surface = font.render(line, True, black)
-        screen.blit(line_surface, (bubble_x + 10, y + y_offset))
-        y_offset += font.size(line)[1] + 5
-
-def update_display():
+def update_display(input_text):
+    global cursor_visible, last_cursor_blink_time, convo_history, scroll_y
     screen.fill(white)
-    y_pos = 10
-    for message in reversed(convo_history[-10:]):  # Display last 10 messages
+
+    total_height = 10  # Start with padding from the top
+
+    def draw_message_bubble(text, x, y, is_user_message):
+        color = light_blue if is_user_message else gray
+        padding = 10
+
+        if not is_user_message:
+            bold_texts = re.findall(r'\*\*(.*?)\*\*', text)
+            italic_texts = re.findall(r'\*(.*?)\*', text)
+            for b_text in bold_texts:
+                text = text.replace(f"**{b_text}**", b_text)
+            for i_text in italic_texts:
+                text = text.replace(f"*{i_text}*", i_text)
+
+        # Calculate max width (user messages use half the screen, response messages use half width)
+        max_width = screen_width // 2 - padding * 2 if is_user_message else screen_width // 2 - padding * 2
+
+        # Aggressive text wrapping
+        wrapped_text = textwrap.wrap(text, width=(max_width // font.size('A')[0]) - 1)
+
+        bubble_height = sum(font.size(line)[1] for line in wrapped_text) + padding * 2
+        bubble_width = max(font.size(line)[0] for line in wrapped_text) + padding * 2
+
+        # Ensure bubble doesn't exceed its half of the screen
+        bubble_width = min(bubble_width, max_width)
+
+        # Position bubble near the right edge for user messages
+        bubble_x = screen_width - bubble_width - x - padding if is_user_message else x
+
+        pygame.draw.rect(screen, color, (bubble_x, y, bubble_width, bubble_height), border_radius=20)
+
+        y_offset = y + padding
+        for i, line in enumerate(wrapped_text):
+            line_surface = font.render(line, True, black)
+
+            # Right-align first line for user messages
+            if is_user_message and i == 0:
+                text_x = screen_width - bubble_width - x  # Stick to the right edge
+            else:
+                # Left-align other lines
+                text_x = bubble_x + padding
+
+            screen.blit(line_surface, (text_x, y_offset))
+            y_offset += font.size(line)[1]
+
+        return bubble_height
+
+    y_pos = 10 + scroll_y
+    for message in convo_history:
         is_user_message = message["role"] == "user"
         text = message["text"]
-        draw_message_bubble(text, 10, y_pos, screen_width - 40, is_user_message)
-        y_pos += 100  # Increment for next message; adjust as needed based on message length
+        y_pos += draw_message_bubble(text, 10, y_pos, is_user_message) + 10
 
     pygame.draw.rect(screen, input_box_color, input_box, border_radius=5)
+    # Update display
+        # Track input length
+    input_length = len(input_text)
+
+    # Enforce the limit
+    if input_length > 100:
+        input_text = input_text[:100]  # Truncate input if exceeding limit
     text_surface = font.render(input_text, True, black)
-    screen.blit(text_surface, (input_box.x + 10, input_box.y + 5))
+    screen.blit(text_surface, (input_box.x + 10, input_box.y + 10))
+
+    if time.time() - last_cursor_blink_time > 0.5:
+        cursor_visible = not cursor_visible
+        last_cursor_blink_time = time.time()
+    if cursor_visible:
+        cursor = pygame.Rect(input_box.x + 10 + text_surface.get_width(), input_box.y + 10, 2, text_surface.get_height())
+        pygame.draw.rect(screen, black, cursor)
+
+    pygame.draw.polygon(screen, send_button_color, [(send_button.x + 10, send_button.y + 10), (send_button.x + 40, send_button.y + 20), (send_button.x + 10, send_button.y + 30)], 0)
+
     pygame.display.flip()
+
 
 def handle_user_input(text):
     global convo_history
-    # Update convo_history with user input
-    convo_history.append({"role": "user", "text",: text})
-    # Send the message to the model and fetch the response
-    response = convo.send_message(parts=[{"text": text}])
-    last_response_text = response.history[-1].parts[0].text if response.history[-1].parts else "No response."
-    # Update convo_history with model's response
+    if not text:
+        return  # Do nothing if text is empty
+
+    message = [{"text": text}]  # Message format
+
+    convo_history.append({"role": "user", "text": text})
+    response = convo.send_message(message)
+    last_response_text = convo.last.text
     convo_history.append({"role": "model", "text": last_response_text})
-    update_display()
+    update_display(input_text)
 
 # Main event loop
 running = True
@@ -111,19 +182,22 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            if input_box.collidepoint(event.pos):
-                active = not active
-            else:
-                active = False
+            # Check if the click is on the send button and there's text to send
+            if send_button.collidepoint(event.pos) and input_text != '':
+                handle_user_input(input_text)
+                input_text = ''
+        # Keep the rest of the event handling as is
         elif event.type == pygame.KEYDOWN:
-            if active:
-                if event.key == pygame.K_RETURN:
-                    handle_user_input(input_text)
-                    input_text = ''  # Clear input text after sending
-                elif event.key == pygame.K_BACKSPACE:
-                    input_text = input_text[:-1]
-                else:
-                    input_text += event.unicode
-    update_display()
+            if event.key == pygame.K_RETURN and input_text != '':
+                handle_user_input(input_text)
+                input_text = ''
+            elif event.key == pygame.K_BACKSPACE:
+                input_text = input_text[:-1]
+            else:
+                input_text += event.unicode
+        elif event.type == pygame.MOUSEWHEEL:
+            scroll_y += event.y * 30
+
+    update_display(input_text)
 
 pygame.quit()
