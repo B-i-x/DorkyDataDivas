@@ -4,35 +4,22 @@ import json
 
 from PyQt5.QtWidgets import QMessageBox, QApplication
 from word_search_generator import WordSearch
-from tkinter import *
-
-from pgu import gui
-
-#from PyQt5.QtWidgets import QMessageBox
 
 from util.colors import Color, generate_colors_for_words, generate_pastel_color
 from gemini.ai import words_related_to_theme
 from algo.lazy import calculate_minimum_grid_size_with_buffer
 
-font_path = "assets/Horizon Type - AcherusGrotesque-Regular.otf"
-# Initialize Pygame
+# Initialize Pygame and set up the display
 pygame.init()
-
-# Screen dimensions
-screen_width = 800
-screen_height = 600
-
-MARGIN_BETWEEN_CELLS = 2.5  # Adjust the margin size as needed
-# Set up the display
+screen_width, screen_height = 800, 600
 screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
 pygame.display.set_caption("Generative Word Search Game")
 
-# Puzzle data
+# Load and set up puzzle data
 words = words_related_to_theme("programming")
 word_colors = generate_colors_for_words(words)
-# print(word_colors)
 size = calculate_minimum_grid_size_with_buffer(words=words)
-puzzle_data = WordSearch(", ".join(words), size=size).json
+puzzle_data = json.loads(WordSearch(", ".join(words), size=size).json)
 
 # words = ",".join(words)
 # print(puzzle_data)
@@ -40,56 +27,41 @@ puzzle_data = json.loads(puzzle_data)
 
 # Extract puzzle grid and words
 grid = puzzle_data['puzzle']
-# print(grid)
-words = puzzle_data['words']
-words = [x.lower() for x in words]
-# print(words)
-# Font for rendering text
+words = [word.lower() for word in puzzle_data['words']]
+font_path = "src/assets/Horizon Type - AcherusGrotesque-Regular.otf"
 font = pygame.font.Font(font_path, 36)
 
-# Keep track of the start cell, end cell, and if we're currently selecting
-start_cell = None
-end_cell = None
+# Initialize game variables
+MARGIN_BETWEEN_CELLS = 2.5
+BLOCK_SIZE = 40
+start_cell = end_cell = None
 selecting = False
 final_selected_cells = []
-
-valid_words_cells = {}  # List to keep track of cells that are part of valid words
-
-surface = pygame.display.get_surface()  # get the surface of the current active display
-window_width, window_height = surface.get_width(), surface.get_height()  # create an array of surface.width and surface.height
-
-BLOCK_SIZE = 40  # Size of grid block
-grid_init_x = window_width / 4  # set the initial x position of the grid
-grid_init_y = window_height / 4  # set the initial y position of the grid
-strikethrough = False
+valid_words_cells = {}
 selected_word = ''
-selected_words = []  # List to keep track of the words selected by the user
-strikethrough_word_indices = []  # List to keep track of indices of the completed words
+selected_words = []
+strikethrough_word_indices = []
+grid_init_x = screen_width / 4  # set the initial x position of the grid
+grid_init_y = screen_height / 4  # set the initial y position of the grid
+strikethrough = False
 
 # colors
 counter = 0
-
+# GUI setup
 class MainWindow(QMessageBox):
     def __init__(self):
         super().__init__()
-        #self.initUI()
         center_x = self.geometry().width() / 2
         center_y = self.geometry().height() / 2
         self.move(int(center_x), int(center_y))
         self.information(self, "Congratulations!", "You Won!", QMessageBox.Ok)
 
-
-def get_font(size):  # Returns Press-Start-2P in the desired size
+def get_font(size):
+    """Returns Press-Start-2P font in the specified size."""
     return pygame.font.Font("assets/font.ttf", size)
 
 
-# Display the heading
-#HEAD_TEXT = get_font(20).render("Generative Word Search", True, '#9B56E3')
-#HEAD_TEXT_RECT = HEAD_TEXT.get_rect(center=(350, 100))
-
-
-def draw_grid(grid, hover_cell):
-    global counter, valid_words_cells
+def draw_grid(grid, selected_cells):
     # Calculate the font size based on BLOCK_SIZE, adjust this ratio as needed
     font_size = int(BLOCK_SIZE * 0.5)  # Example ratio
     font = pygame.font.Font(font_path, font_size)
@@ -275,7 +247,6 @@ while running:
         selected_cells = []  # Clear temporary selection path when not selecting
 
     screen.fill(Color.MAIN_BACKGROUND_COLOR.value)
-    #screen.blit(HEAD_TEXT, HEAD_TEXT_RECT)
     draw_grid(grid, selected_cells)  # Pass the temporary path for visualization
     draw_words(words, strikethrough, selected_word)
     pygame.display.flip()
