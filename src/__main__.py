@@ -35,6 +35,8 @@ FONT_SIZE = 25
 MARGIN_LEFT = 60
 MARGIN_TOP = 25
 LINE_SPACING = 40
+WORD_BOX_WIDTH = 200  # Assuming a fixed width for the word list box
+WORD_BOX_VERTICAL_AXIS_PLACEMENT_RELATIVE_TO_SCREEN = 4 / 5
 start_cell = end_cell = None
 selecting = False
 final_selected_cells = []
@@ -42,8 +44,10 @@ valid_words_cells = {}
 selected_word = ''
 selected_words = []
 strikethrough_word_indices = []
-grid_init_x = screen_width / 4  # set the initial x position of the grid
-grid_init_y = screen_height / 4  # set the initial y position of the grid
+grid_width = len(grid[0]) * (BLOCK_SIZE + MARGIN_BETWEEN_CELLS) - MARGIN_BETWEEN_CELLS
+grid_height = len(grid) * (BLOCK_SIZE + MARGIN_BETWEEN_CELLS) - MARGIN_BETWEEN_CELLS
+grid_init_x = (screen_width / 3) - grid_width / 2
+grid_init_y = (screen_height - grid_height) / 2
 strikethrough = False
 
 # colors
@@ -134,51 +138,68 @@ def add_rect(start_x, start_y, height_in_pixels=200):
     pygame.draw.rect(screen, Color.BLACK.value, pygame.Rect(start_x, start_y, 200, height_in_pixels), 2)
 
 
-def add_text(words, start_x, start_y, strikethrough, selected_word):
-    """
-    Renders words with optional strikethrough effect to indicate selection or completion.
-    
-    :param words: List of words to display.
-    :param start_x: The starting X coordinate.
-    :param start_y: The starting Y coordinate.
-    :param strikethrough: Boolean indicating whether to apply strikethrough.
-    :param selected_word: The currently selected word.
-    :return: The total height of rendered text area.
-    """
-    # Initialize font
-    font = pygame.font.Font(font_path, FONT_SIZE)
-    
-    for idx, word in enumerate(words):
-        # Render the word
-        text_surface = font.render(word, True, Color.BLACK.value)
-        text_rect = text_surface.get_rect(topleft=(start_x + MARGIN_LEFT, start_y))
-        screen.blit(text_surface, text_rect)
-        
-        # Apply strikethrough if needed
-        if (strikethrough and word.lower() == selected_word) or (idx in strikethrough_word_indices):
-            if idx not in strikethrough_word_indices:
-                strikethrough_word_indices.append(idx)
-            line_y = text_rect.centery
-            pygame.draw.line(screen, Color.BLACK.value, (text_rect.left, line_y), (text_rect.right, line_y), 2)
-        
-        start_y += LINE_SPACING
-
-    return ((LINE_SPACING - FONT_SIZE) + LINE_SPACING) * len(words)
-
 def draw_words(words, strikethrough, selected_word):
     """
-    Handles drawing the word list with optional strikethrough effect.
+    Handles drawing the word list with optional strikethrough effect, ensuring that the block's
+    horizontal midline is aligned with the screen's horizontal axis and its vertical midline is
+    adjusted based on the WORD_BOX_VERTICAL_AXIS_PLACEMENT_RELATIVE_TO_SCREEN variable.
     
     :param words: List of words to draw.
     :param strikethrough: Indicates if a strikethrough effect should be applied.
     :param selected_word: The word currently selected (for strikethrough).
     """
-    # Define starting coordinates for the word list
-    start_x = BLOCK_SIZE + 520
-    start_y = BLOCK_SIZE + 150
+    # Assume WORD_BOX_WIDTH is defined elsewhere in your code, e.g., as a constant.
+    
+    # First, draw the text off-screen to calculate the total height needed
+    offscreen_surface = pygame.Surface((WORD_BOX_WIDTH, screen_height))
+    height_of_words = add_text(words, 0, 0, strikethrough, selected_word, surface=offscreen_surface)
 
-    height_of_words = add_text(words, start_x, start_y, strikethrough, selected_word)
+    # Calculate the starting X position so that the box's vertical midline is at the desired fraction of the screen's width
+    start_x = screen_width * WORD_BOX_VERTICAL_AXIS_PLACEMENT_RELATIVE_TO_SCREEN - WORD_BOX_WIDTH / 2
+
+    # Calculate the starting Y position so that the box's horizontal midline is aligned with the screen's horizontal axis
+    start_y = (screen_height - height_of_words) / 2
+
+    # Now draw the text on the actual screen
+    add_text(words, start_x, start_y, strikethrough, selected_word, surface=screen)
     add_rect(start_x, start_y, height_of_words)
+
+# Modify the add_text function signature to accept a `surface` parameter, allowing us to draw on different surfaces
+def add_text(words, start_x, start_y, strikethrough, selected_word, surface):
+    """
+    Renders words with optional strikethrough effect to indicate selection or completion.
+    This version accepts a `surface` parameter to support off-screen height calculation and actual drawing,
+    and adjusts the strikethrough effect to apply only across the text width.
+
+    :param words: List of words to display.
+    :param start_x: The starting X coordinate.
+    :param start_y: The starting Y coordinate.
+    :param strikethrough: Boolean indicating whether to apply strikethrough.
+    :param selected_word: The currently selected word.
+    :param surface: The pygame Surface to draw on.
+    :return: The total height of rendered text area.
+    """
+    font = pygame.font.Font(font_path, FONT_SIZE)
+    total_height = 0
+    for idx, word in enumerate(words):
+        # Render the word
+        text_surface = font.render(word, True, Color.BLACK.value)
+        text_width = text_surface.get_width()  # Get the width of the rendered text
+        surface.blit(text_surface, (start_x + MARGIN_LEFT, start_y + total_height))
+        
+        # Apply strikethrough if needed
+        if (strikethrough and word.lower() == selected_word) or (idx in strikethrough_word_indices):
+            if idx not in strikethrough_word_indices:
+                strikethrough_word_indices.append(idx)
+            line_y = start_y + total_height + font.get_height() / 2
+            # Draw the strikethrough line across the width of the text, not the whole box
+            pygame.draw.line(surface, Color.BLACK.value, (start_x + MARGIN_LEFT, line_y), (start_x + MARGIN_LEFT + text_width, line_y), 2)
+        
+        total_height += font.get_height() + LINE_SPACING - FONT_SIZE
+
+    return total_height
+
+
 
 
 def get_cell_from_mouse_pos(pos, grid_init_x, grid_init_y):
