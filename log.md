@@ -52,5 +52,23 @@ greedy algo is tested and it is good starter point
 you can now actually select whole words in the gui
 the ai convo at the beginning works beautifully
 
+## Time: 3-16 7:30PM
+
+ui has different font and strike through functions
+
+## Time 3-16 11:00PM
+
+palette works
+ai screen is making progress
+vai 's exit screen looks good
+
+## Time 3-17 1:00AM
+
+sounds are in the game
+word search game is basically done
+ai part is still in the works
+fireoworks are being added
+can successfully close out the game now
+
 
 
