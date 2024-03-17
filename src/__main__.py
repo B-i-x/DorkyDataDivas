@@ -62,59 +62,31 @@ def get_font(size):
 
 
 def draw_grid(grid, selected_cells):
-    # Calculate the font size based on BLOCK_SIZE, adjust this ratio as needed
-    font_size = int(BLOCK_SIZE * 0.5)  # Example ratio
-    font = pygame.font.Font(font_path, font_size)
-    
+    """Draws the puzzle grid and highlights selected cells."""
+    font = pygame.font.Font(font_path, int(BLOCK_SIZE * 0.5))
     for y, row in enumerate(grid):
         for x, letter in enumerate(row):
-            # Adjusted rect size and position to add space between cells
-            rect = pygame.Rect(grid_init_x + x * (BLOCK_SIZE + MARGIN_BETWEEN_CELLS) + MARGIN_BETWEEN_CELLS,
-                               grid_init_y + y * (BLOCK_SIZE + MARGIN_BETWEEN_CELLS) + MARGIN_BETWEEN_CELLS,
-                               BLOCK_SIZE - 2*MARGIN_BETWEEN_CELLS, BLOCK_SIZE - 2*MARGIN_BETWEEN_CELLS)
-            # Define rounded corners, adjust radius as needed
-            border_radius = int(BLOCK_SIZE * 0.1)  # Example radius, adjust as needed
-            
-            # if (y, x) in valid_words_cells:  # Check if cell is part of a valid word
-            #     # Find the word that the cell belongs to
-            #     for word, cells in valid_words_cells.items():
-            #         if (y, x) in cells:
-            #             color = word_colors[word]  # Use the stored color for this word
-            #             break
-            #     pygame.draw.rect(screen, color, rect, border_radius=border_radius)
-            #     text_color = Color.BLACK.value
-
-            #     text_color = Color.BLACK.value
-            # elif (y, x) in selected_cells or hover_cell == (y, x):
-            #     pygame.draw.rect(screen, Color.HOVER_CELL_COLOR.value, rect, border_radius=border_radius)
-            #     text_color = Color.MAIN_BACKGROUND_COLOR.value
-            # else:
-            #     pygame.draw.rect(screen, Color.GREY.value, rect, 1, border_radius=border_radius)
-            #     text_color = Color.BLACK.value
-
-            # Default cell properties
-            color = Color.MAIN_BACKGROUND_COLOR.value
-            text_color = Color.BLACK.value
-            
-            # Check if current cell is part of any valid word
-            cell_is_valid_word = False
-            for word, cells in valid_words_cells.items():
-                
-                if (y, x) in cells:
-                    color = word_colors.get(word, Color.GREY.value)
-                    # print(color)
-                    break
-
-            # Highlight cells part of the current selection path
-            if (y, x) in selected_cells:
-                color = Color.HOVER_CELL_COLOR.value  # Adjust color for selected cells
-
-            # Drawing the cell rectangle and letter as before
-            pygame.draw.rect(screen, color, rect, border_radius=border_radius)
+            rect = pygame.Rect(grid_init_x + x * (BLOCK_SIZE + MARGIN_BETWEEN_CELLS),
+                               grid_init_y + y * (BLOCK_SIZE + MARGIN_BETWEEN_CELLS),
+                               BLOCK_SIZE - 2*MARGIN_BETWEEN_CELLS,
+                               BLOCK_SIZE - 2*MARGIN_BETWEEN_CELLS)
+            color, text_color = determine_cell_color(x, y, selected_cells)
+            pygame.draw.rect(screen, color, rect, border_radius=int(BLOCK_SIZE * 0.1))
             text_surface = font.render(letter.lower(), True, text_color)
-            text_rect = text_surface.get_rect(center=rect.center)
-            screen.blit(text_surface, text_rect)
+            screen.blit(text_surface, text_surface.get_rect(center=rect.center))
 
+
+def determine_cell_color(x, y, selected_cells):
+    """Determines the color of a cell based on its state."""
+    color = Color.MAIN_BACKGROUND_COLOR.value
+    text_color = Color.BLACK.value
+    if (y, x) in selected_cells:
+        color = Color.HOVER_CELL_COLOR.value
+    for word, cells in valid_words_cells.items():
+        if (y, x) in cells:
+            color = word_colors.get(word, Color.GREY.value)
+            break
+    return color, text_color
 
 
 def add_rect(start_x, start_y, height_in_pixels=200):
@@ -194,64 +166,68 @@ def game_over():
     window = MainWindow()
     sys.exit(app.exec_())
 
+
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            running = False  # Exit the loop if the game window is closed
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            strikthrough = False
+            # Reset strikethrough for new selection
+            strikethrough = False
+            
+            # Handle selection logic
             if not selecting:
-                # Start selection
+                # If not already selecting, start new selection
                 start_cell = get_cell_from_mouse_pos(pygame.mouse.get_pos(), grid_init_x, grid_init_y)
-                if start_cell is not None:  # Ensure start_cell is within the grid
+                if start_cell is not None:  # Confirm the start cell is within the grid
                     selecting = True
-                    final_selected_cells.clear()
+                    final_selected_cells.clear()  # Reset the list for new selections
             else:
-                # print(f"Before adding: {valid_words_cells}")
+                # Validate the selection upon mouse button release
                 if final_selected_cells and is_valid_word(final_selected_cells):
                     valid_word = ''.join(grid[y][x] for y, x in final_selected_cells).lower()
-                    # print(f"Adding {valid_word}: {final_selected_cells}")
                     if valid_word not in valid_words_cells:
+                        # Save the selection if it's a new valid word
                         valid_words_cells[valid_word] = list(final_selected_cells)
-                    # else:
-                    #     valid_words_cells[valid_word].extend(final_selected_cells)  # Consider if this logic is necessary for your game
-                    # print(f"After adding: {valid_words_cells}")
                 else:
+                    # Provide feedback for invalid selections
                     print("Invalid or no word selected")
 
+                # Reset selection status
                 selecting = False
                 start_cell = None
-                final_selected_cells.clear()  # Clear selection regardless of validity
+                final_selected_cells.clear()
 
+    # Highlighting the cell under the mouse cursor
     current_hover_cell = get_cell_from_mouse_pos(pygame.mouse.get_pos(), grid_init_x, grid_init_y)
+    selected_cells = []
     if selecting and start_cell and current_hover_cell:
         end_cell = current_hover_cell
-        if end_cell:  # Only compute the path if end_cell is within the grid
+        if end_cell:  # Validate end cell is within the grid
             selected_cells = compute_path(start_cell, end_cell)
 
-            # print(is_valid_word(selected_cells))
+            # Check if the path forms a valid word
             if is_valid_word(selected_cells):
+                # Save and highlight the valid selection
                 final_selected_cells = list(selected_cells)
                 selected_word = ''.join(grid[y][x] for y, x in selected_cells).lower()
                 selected_words.append(selected_word)
                 selected_words = [x.lower() for x in selected_words]
                 strikethrough = True
             else:
-                final_selected_cells.clear()
-            # print(selected_cells)
+                final_selected_cells.clear()  # Clear selection if the path is invalid
 
-        else:
-            selected_cells = []  # Clear temporary selection path if out of bounds
-    else:
-        selected_cells = []  # Clear temporary selection path when not selecting
-
+    # Refresh the screen
     screen.fill(Color.MAIN_BACKGROUND_COLOR.value)
-    draw_grid(grid, selected_cells)  # Pass the temporary path for visualization
-    draw_words(words, strikethrough, selected_word)
-    pygame.display.flip()
+    draw_grid(grid, selected_cells)  # Draw the grid with the current selection highlighted
+    draw_words(words, strikethrough, selected_word)  # Draw the list of words, marking found ones
+    pygame.display.flip()  # Update the display with everything drawn
+
+    # Check for game completion
     if set(selected_words) == set(words):
-        game_over()
+        game_over()  # Call the game over function when all words are found
+
 
 
 pygame.quit()
