@@ -14,7 +14,7 @@ from util.colors import Color
 from gemini.ai import words_related_to_theme
 from algo.lazy import calculate_minimum_grid_size_with_buffer
 
-font_path = "src/assets/AovelSansRounded-rdDL.ttf"
+font_path = "src/assets/Horizon Type - AcherusGrotesque-Regular.otf"
 # Initialize Pygame
 pygame.init()
 
@@ -22,6 +22,7 @@ pygame.init()
 screen_width = 800
 screen_height = 600
 
+MARGIN_BETWEEN_CELLS = 2.5  # Adjust the margin size as needed
 # Set up the display
 screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
 pygame.display.set_caption("Generative Word Search Game")
@@ -53,6 +54,7 @@ final_selected_cells = []
 valid_words_cells = []  # List to keep track of cells that are part of valid words
 surface = pygame.display.get_surface()  # get the surface of the current active display
 window_width, window_height = surface.get_width(), surface.get_height()  # create an array of surface.width and surface.height
+
 BLOCK_SIZE = 40  # Size of grid block
 grid_init_x = window_width / 4  # set the initial x position of the grid
 grid_init_y = window_height / 4  # set the initial y position of the grid
@@ -111,35 +113,47 @@ def get_font(size):  # Returns Press-Start-2P in the desired size
 
 
 def draw_grid(grid, hover_cell):
+    # Calculate the font size based on BLOCK_SIZE, adjust this ratio as needed
+    font_size = int(BLOCK_SIZE * 0.5)  # Example ratio
+    font = pygame.font.Font(font_path, font_size)
+    
     for y, row in enumerate(grid):
         for x, letter in enumerate(row):
-            rect = pygame.Rect(grid_init_x + x * BLOCK_SIZE, grid_init_y + y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
+            # Adjusted rect size and position to add space between cells
+            rect = pygame.Rect(grid_init_x + x * (BLOCK_SIZE + MARGIN_BETWEEN_CELLS) + MARGIN_BETWEEN_CELLS,
+                               grid_init_y + y * (BLOCK_SIZE + MARGIN_BETWEEN_CELLS) + MARGIN_BETWEEN_CELLS,
+                               BLOCK_SIZE - 2*MARGIN_BETWEEN_CELLS, BLOCK_SIZE - 2*MARGIN_BETWEEN_CELLS)
+            # Define rounded corners, adjust radius as needed
+            border_radius = int(BLOCK_SIZE * 0.1)  # Example radius, adjust as needed
+            
             if (y, x) in valid_words_cells:  # Check if cell is part of a valid word
-                pygame.draw.rect(screen, Color.GREEN.value, rect)  # Use a different color for valid words
+                pygame.draw.rect(screen, Color.GREEN.value, rect, border_radius=border_radius)  # Use a different color for valid words
                 text_color = Color.BLACK.value
             elif (y, x) in selected_cells or hover_cell == (y, x):
-                pygame.draw.rect(screen, Color.HOVER_CELL_COLOR.value, rect)
-                text_color = Color.WHITE.value
+                pygame.draw.rect(screen, Color.HOVER_CELL_COLOR.value, rect, border_radius=border_radius)
+                text_color = Color.MAIN_BACKGROUND_COLOR.value
             else:
-                pygame.draw.rect(screen, Color.GREY.value, rect, 1)
+                pygame.draw.rect(screen, Color.GREY.value, rect, 1, border_radius=border_radius)
                 text_color = Color.BLACK.value
+
             text_surface = font.render(letter.lower(), True, text_color)
             text_rect = text_surface.get_rect(center=rect.center)
             screen.blit(text_surface, text_rect)
 
 
-def add_rect(start_x, start_y):
-    pygame.draw.rect(screen, Color.BLACK.value, pygame.Rect(start_x, start_y, 200, 200), 2)
+
+def add_rect(start_x, start_y, height_in_pixels=200):
+    pygame.draw.rect(screen, Color.BLACK.value, pygame.Rect(start_x, start_y, 200, height_in_pixels), 2)
 
 
 def add_text(words, start_x, start_y, strikethrough, selected_word):
-    font = pygame.font.Font("assets/Horizon Type - AcherusGrotesque-Regular.otf", 25)
-
+    search_words_on_the_left_font = pygame.font.Font(font_path, 25)
+    font_row_width, font_row_height = search_words_on_the_left_font.size(words[0])
     for idx, word in enumerate(words):
         if (strikethrough and word.lower() == selected_word) or (idx in strikethrough_word_indices):
             if idx not in strikethrough_word_indices:
                 strikethrough_word_indices.append(idx)
-            text_surface = font.render(word, True, Color.BLACK.value)
+            text_surface = search_words_on_the_left_font.render(word, True, Color.BLACK.value)
             text_rect = text_surface.get_rect()
             text_rect.topleft = (start_x + 60, start_y + 25)
             # Calculate the position of the line for strikethrough effect
@@ -149,19 +163,21 @@ def add_text(words, start_x, start_y, strikethrough, selected_word):
             # Draw the strikethrough line
             pygame.draw.line(screen, Color.BLACK.value, (text_rect.left, line_y), (text_rect.right, line_y), 2)
         else:
-            text = font.render(word, True, Color.BLACK.value)
+            text = search_words_on_the_left_font.render(word, True, Color.BLACK.value)
             screen.blit(text, (start_x + 60, start_y + 25))
 
         start_y += 40
 
+    return ((40 - font_row_height) + 40)  * len(words)
 
 # Function to draw the words list
 def draw_words(words, strikethrough, selected_word):
     start_x = BLOCK_SIZE + 520
     start_y = BLOCK_SIZE + 150
 
-    add_rect(start_x, start_y)
-    add_text(words, start_x, start_y, strikethrough, selected_word)
+    height_of_words = add_text(words, start_x, start_y, strikethrough, selected_word)
+    # print(height_of_words)
+    add_rect(start_x, start_y, height_of_words)
 
 
 # Function to get cell from mouse position
@@ -194,7 +210,7 @@ def is_valid_word(path):
     except IndexError:
         return False
     searchable_words = [word.lower() for word in words]
-    print(selected_word, searchable_words)
+    # print(selected_word, searchable_words)
     return selected_word in searchable_words
 
 
@@ -239,6 +255,7 @@ while running:
                 if final_selected_cells and is_valid_word(final_selected_cells):
                     print('Valid word selected:', ''.join(grid[y][x] for y, x in final_selected_cells))
                     valid_words_cells.extend(final_selected_cells)  # Add the valid word's cells to the list
+
                 else:
                     print('Invalid word selected:', ''.join(grid[y][x] for y, x in final_selected_cells))
                 selecting = False
@@ -260,14 +277,14 @@ while running:
                 strikethrough = True
             else:
                 final_selected_cells.clear()
-            print(selected_cells)
+            # print(selected_cells)
 
         else:
             selected_cells = []  # Clear temporary selection path if out of bounds
     else:
         selected_cells = []  # Clear temporary selection path when not selecting
 
-    screen.fill(Color.WHITE.value)
+    screen.fill(Color.MAIN_BACKGROUND_COLOR.value)
     #screen.blit(HEAD_TEXT, HEAD_TEXT_RECT)
     draw_grid(grid, selected_cells)  # Pass the temporary path for visualization
     draw_words(words, strikethrough, selected_word)
