@@ -3,14 +3,12 @@ import sys
 import json
 from word_search_generator import WordSearch
 from tkinter import *
-from tkinter import messagebox
-import tkinter as tk
+
 from pgu import gui
-import math
-import collections
+
 #from PyQt5.QtWidgets import QMessageBox
 
-from util.colors import Color
+from util.colors import Color, generate_colors_for_words, generate_pastel_color
 from gemini.ai import words_related_to_theme
 from algo.lazy import calculate_minimum_grid_size_with_buffer
 
@@ -29,6 +27,8 @@ pygame.display.set_caption("Generative Word Search Game")
 
 # Puzzle data
 words = words_related_to_theme("programming")
+word_colors = generate_colors_for_words(words)
+# print(word_colors)
 size = calculate_minimum_grid_size_with_buffer(words=words)
 puzzle_data = WordSearch(", ".join(words), size=size).json
 
@@ -51,7 +51,8 @@ end_cell = None
 selecting = False
 final_selected_cells = []
 
-valid_words_cells = []  # List to keep track of cells that are part of valid words
+valid_words_cells = {}  # List to keep track of cells that are part of valid words
+
 surface = pygame.display.get_surface()  # get the surface of the current active display
 window_width, window_height = surface.get_width(), surface.get_height()  # create an array of surface.width and surface.height
 
@@ -63,6 +64,8 @@ selected_word = ''
 selected_words = []  # List to keep track of the words selected by the user
 strikethrough_word_indices = []  # List to keep track of indices of the completed words
 
+# colors
+counter = 0
 
 # Class widget or pop-up window
 class POPDialog(gui.Dialog):
@@ -113,6 +116,7 @@ def get_font(size):  # Returns Press-Start-2P in the desired size
 
 
 def draw_grid(grid, hover_cell):
+    global counter, valid_words_cells
     # Calculate the font size based on BLOCK_SIZE, adjust this ratio as needed
     font_size = int(BLOCK_SIZE * 0.5)  # Example ratio
     font = pygame.font.Font(font_path, font_size)
@@ -126,16 +130,42 @@ def draw_grid(grid, hover_cell):
             # Define rounded corners, adjust radius as needed
             border_radius = int(BLOCK_SIZE * 0.1)  # Example radius, adjust as needed
             
-            if (y, x) in valid_words_cells:  # Check if cell is part of a valid word
-                pygame.draw.rect(screen, Color.GREEN.value, rect, border_radius=border_radius)  # Use a different color for valid words
-                text_color = Color.BLACK.value
-            elif (y, x) in selected_cells or hover_cell == (y, x):
-                pygame.draw.rect(screen, Color.HOVER_CELL_COLOR.value, rect, border_radius=border_radius)
-                text_color = Color.MAIN_BACKGROUND_COLOR.value
-            else:
-                pygame.draw.rect(screen, Color.GREY.value, rect, 1, border_radius=border_radius)
-                text_color = Color.BLACK.value
+            # if (y, x) in valid_words_cells:  # Check if cell is part of a valid word
+            #     # Find the word that the cell belongs to
+            #     for word, cells in valid_words_cells.items():
+            #         if (y, x) in cells:
+            #             color = word_colors[word]  # Use the stored color for this word
+            #             break
+            #     pygame.draw.rect(screen, color, rect, border_radius=border_radius)
+            #     text_color = Color.BLACK.value
 
+            #     text_color = Color.BLACK.value
+            # elif (y, x) in selected_cells or hover_cell == (y, x):
+            #     pygame.draw.rect(screen, Color.HOVER_CELL_COLOR.value, rect, border_radius=border_radius)
+            #     text_color = Color.MAIN_BACKGROUND_COLOR.value
+            # else:
+            #     pygame.draw.rect(screen, Color.GREY.value, rect, 1, border_radius=border_radius)
+            #     text_color = Color.BLACK.value
+
+            # Default cell properties
+            color = Color.MAIN_BACKGROUND_COLOR.value
+            text_color = Color.BLACK.value
+            
+            # Check if current cell is part of any valid word
+            cell_is_valid_word = False
+            for word, cells in valid_words_cells.items():
+                
+                if (y, x) in cells:
+                    color = word_colors.get(word, Color.GREY.value)
+                    # print(color)
+                    break
+
+            # Highlight cells part of the current selection path
+            if (y, x) in selected_cells:
+                color = Color.HOVER_CELL_COLOR.value  # Adjust color for selected cells
+
+            # Drawing the cell rectangle and letter as before
+            pygame.draw.rect(screen, color, rect, border_radius=border_radius)
             text_surface = font.render(letter.lower(), True, text_color)
             text_rect = text_surface.get_rect(center=rect.center)
             screen.blit(text_surface, text_rect)
@@ -252,12 +282,18 @@ while running:
                     selecting = True
                     final_selected_cells.clear()
             else:
+                # print(f"Before adding: {valid_words_cells}")
                 if final_selected_cells and is_valid_word(final_selected_cells):
-                    print('Valid word selected:', ''.join(grid[y][x] for y, x in final_selected_cells))
-                    valid_words_cells.extend(final_selected_cells)  # Add the valid word's cells to the list
-
+                    valid_word = ''.join(grid[y][x] for y, x in final_selected_cells).lower()
+                    # print(f"Adding {valid_word}: {final_selected_cells}")
+                    if valid_word not in valid_words_cells:
+                        valid_words_cells[valid_word] = list(final_selected_cells)
+                    # else:
+                    #     valid_words_cells[valid_word].extend(final_selected_cells)  # Consider if this logic is necessary for your game
+                    # print(f"After adding: {valid_words_cells}")
                 else:
-                    print('Invalid word selected:', ''.join(grid[y][x] for y, x in final_selected_cells))
+                    print("Invalid or no word selected")
+
                 selecting = False
                 start_cell = None
                 final_selected_cells.clear()  # Clear selection regardless of validity
