@@ -56,7 +56,11 @@ class MainWindow(QMessageBox):
         center_x = self.geometry().width() / 2
         center_y = self.geometry().height() / 2
         self.move(int(center_x), int(center_y))
-        self.information(self, "Congratulations!", "You Won!", QMessageBox.Ok)
+        reply = self.information(self, "Congratulations!", "You Won!", QMessageBox.Ok)
+        if reply == QMessageBox.Ok:
+            pygame.quit()
+            sys.exit()
+
 
 def get_font(size):
     """Returns Press-Start-2P font in the specified size."""
