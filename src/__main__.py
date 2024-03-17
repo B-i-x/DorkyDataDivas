@@ -7,6 +7,8 @@ import math
 from util.colors import Color
 from gemini.ai import words_related_to_theme
 from algo.lazy import calculate_minimum_grid_size_with_buffer
+
+font_path = "src/assets/AovelSansRounded-rdDL.ttf"
 # Initialize Pygame
 pygame.init()
 
@@ -33,7 +35,7 @@ grid = puzzle_data['puzzle']
 words = puzzle_data['words']
 # print(words)
 # Font for rendering text
-font = pygame.font.Font("assets/AovelSansRounded-rdDL.ttf", 36)
+font = pygame.font.Font(font_path, 36)
 
 # Keep track of the start cell, end cell, and if we're currently selecting
 start_cell = None
@@ -53,7 +55,7 @@ strikethrough_word_indices = []
 
 
 def get_font(size): # Returns Press-Start-2P in the desired size
-    return pygame.font.Font("assets/font.ttf", size)
+    return pygame.font.Font(font_path, size)
 
 
 # Display the heading
@@ -70,7 +72,7 @@ def draw_grid(grid, hover_cell):
                 pygame.draw.rect(screen, Color.GREEN.value, rect)  # Use a different color for valid words
                 text_color = Color.BLACK.value
             elif (y, x) in selected_cells or hover_cell == (y, x):
-                pygame.draw.rect(screen, Color.BLUE.value, rect)
+                pygame.draw.rect(screen, Color.HOVER_CELL_COLOR.value, rect)
                 text_color = Color.WHITE.value
             else:
                 pygame.draw.rect(screen, Color.GREY.value, rect, 1)
@@ -140,7 +142,10 @@ def compute_path(start_cell, end_cell):
 
 
 def is_valid_word(path):
-    selected_word = ''.join(grid[y][x] for y, x in path).lower()
+    try:
+        selected_word = ''.join(grid[y][x] for y, x in path).lower()
+    except IndexError:
+        return False
     searchable_words = [word.lower() for word in words]
     print(selected_word, searchable_words)
     return selected_word in searchable_words

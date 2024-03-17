@@ -52,5 +52,9 @@ greedy algo is tested and it is good starter point
 you can now actually select whole words in the gui
 the ai convo at the beginning works beautifully
 
+## Time: 3-16 7:30PM
+
+ui has different font and strike through functions
+
 
 
