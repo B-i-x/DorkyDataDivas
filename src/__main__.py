@@ -21,14 +21,10 @@ word_colors = generate_colors_for_words(words)
 size = calculate_minimum_grid_size_with_buffer(words=words)
 puzzle_data = json.loads(WordSearch(", ".join(words), size=size).json)
 
-# words = ",".join(words)
-# print(puzzle_data)
-puzzle_data = json.loads(puzzle_data)
-
 # Extract puzzle grid and words
 grid = puzzle_data['puzzle']
 words = [word.lower() for word in puzzle_data['words']]
-font_path = "src/assets/Horizon Type - AcherusGrotesque-Regular.otf"
+font_path = "assets/Horizon Type - AcherusGrotesque-Regular.otf"
 font = pygame.font.Font(font_path, 36)
 
 # Initialize game variables
@@ -47,6 +43,7 @@ strikethrough = False
 
 # colors
 counter = 0
+
 # GUI setup
 class MainWindow(QMessageBox):
     def __init__(self):
