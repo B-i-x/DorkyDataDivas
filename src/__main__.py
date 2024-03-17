@@ -8,7 +8,7 @@ from word_search_generator import WordSearch
 from util.colors import Color, generate_colors_for_words, generate_pastel_color
 from gemini.ai import words_related_to_theme
 from algo.lazy import calculate_minimum_grid_size_with_buffer
-
+from core.sounds import found_word_sound, game_won_sound
 # Initialize Pygame and set up the display
 pygame.init()
 screen_width, screen_height = 800, 600
@@ -255,6 +255,7 @@ def is_valid_word(path):
     return selected_word in [word.lower() for word in words]
 
 def game_over():
+    game_won_sound()  # Play a sound effect for winning the game
     app = QApplication(sys.argv)
     window = MainWindow()
     sys.exit(app.exec_())
@@ -283,6 +284,7 @@ while running:
                     if valid_word not in valid_words_cells:
                         # Save the selection if it's a new valid word
                         valid_words_cells[valid_word] = list(final_selected_cells)
+                        found_word_sound()  # Play a sound effect for finding a word
                 else:
                     # Provide feedback for invalid selections
                     print("Invalid or no word selected")
