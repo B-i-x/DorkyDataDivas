@@ -24,12 +24,17 @@ puzzle_data = json.loads(WordSearch(", ".join(words), size=size).json)
 # Extract puzzle grid and words
 grid = puzzle_data['puzzle']
 words = [word.lower() for word in puzzle_data['words']]
-font_path = "assets/Horizon Type - AcherusGrotesque-Regular.otf"
+font_path = "src/assets/Horizon Type - AcherusGrotesque-Regular.otf"
 font = pygame.font.Font(font_path, 36)
 
 # Initialize game variables
+
 MARGIN_BETWEEN_CELLS = 2.5
 BLOCK_SIZE = 40
+FONT_SIZE = 25
+MARGIN_LEFT = 60
+MARGIN_TOP = 25
+LINE_SPACING = 40
 start_cell = end_cell = None
 selecting = False
 final_selected_cells = []
@@ -91,50 +96,78 @@ def add_rect(start_x, start_y, height_in_pixels=200):
 
 
 def add_text(words, start_x, start_y, strikethrough, selected_word):
-    search_words_on_the_left_font = pygame.font.Font(font_path, 25)
-    font_row_width, font_row_height = search_words_on_the_left_font.size(words[0])
+    """
+    Renders words with optional strikethrough effect to indicate selection or completion.
+    
+    :param words: List of words to display.
+    :param start_x: The starting X coordinate.
+    :param start_y: The starting Y coordinate.
+    :param strikethrough: Boolean indicating whether to apply strikethrough.
+    :param selected_word: The currently selected word.
+    :return: The total height of rendered text area.
+    """
+    # Initialize font
+    font = pygame.font.Font(font_path, FONT_SIZE)
+    
     for idx, word in enumerate(words):
+        # Render the word
+        text_surface = font.render(word, True, Color.BLACK.value)
+        text_rect = text_surface.get_rect(topleft=(start_x + MARGIN_LEFT, start_y))
+        screen.blit(text_surface, text_rect)
+        
+        # Apply strikethrough if needed
         if (strikethrough and word.lower() == selected_word) or (idx in strikethrough_word_indices):
             if idx not in strikethrough_word_indices:
                 strikethrough_word_indices.append(idx)
-            text_surface = search_words_on_the_left_font.render(word, True, Color.BLACK.value)
-            text_rect = text_surface.get_rect()
-            text_rect.topleft = (start_x + 60, start_y + 25)
-            # Calculate the position of the line for strikethrough effect
             line_y = text_rect.centery
-            # Draw the text
-            screen.blit(text_surface, text_rect)
-            # Draw the strikethrough line
             pygame.draw.line(screen, Color.BLACK.value, (text_rect.left, line_y), (text_rect.right, line_y), 2)
-        else:
-            text = search_words_on_the_left_font.render(word, True, Color.BLACK.value)
-            screen.blit(text, (start_x + 60, start_y + 25))
+        
+        start_y += LINE_SPACING
 
-        start_y += 40
+    return ((LINE_SPACING - FONT_SIZE) + LINE_SPACING) * len(words)
 
-    return ((40 - font_row_height) + 40)  * len(words)
-
-# Function to draw the words list
 def draw_words(words, strikethrough, selected_word):
+    """
+    Handles drawing the word list with optional strikethrough effect.
+    
+    :param words: List of words to draw.
+    :param strikethrough: Indicates if a strikethrough effect should be applied.
+    :param selected_word: The word currently selected (for strikethrough).
+    """
+    # Define starting coordinates for the word list
     start_x = BLOCK_SIZE + 520
     start_y = BLOCK_SIZE + 150
 
     height_of_words = add_text(words, start_x, start_y, strikethrough, selected_word)
-    # print(height_of_words)
     add_rect(start_x, start_y, height_of_words)
 
 
-# Function to get cell from mouse position
 def get_cell_from_mouse_pos(pos, grid_init_x, grid_init_y):
+    """
+    Converts a mouse position to grid coordinates.
+    
+    :param pos: The mouse position tuple (x, y).
+    :param grid_init_x: The initial x position of the grid.
+    :param grid_init_y: The initial y position of the grid.
+    :return: The cell coordinates as a tuple (row, col), or None if outside grid.
+    """
     x, y = pos
-    row = (x - grid_init_x) // 40
-    col = (y - grid_init_y) // 40
-    if row < len(grid) and col < len(grid[0]):
-        return (int(col), int(row))
+    row = int((y - grid_init_y) / BLOCK_SIZE)
+    col = int((x - grid_init_x) / BLOCK_SIZE)
+    if 0 <= row < len(grid) and 0 <= col < len(grid[0]):
+        return (row, col)
     return None
 
 
+
 def compute_path(start_cell, end_cell):
+    """
+    Computes the path between two cells, considering diagonal, horizontal, or vertical movements.
+    
+    :param start_cell: The starting cell coordinates as a tuple (row, col).
+    :param end_cell: The ending cell coordinates as a tuple (row, col).
+    :return: A list of cell coordinates representing the path.
+    """
     if not start_cell or not end_cell:
         return []
     path = []
@@ -143,20 +176,23 @@ def compute_path(start_cell, end_cell):
     step_row = delta_row // max(abs(delta_row), 1)
     step_col = delta_col // max(abs(delta_col), 1)
 
-    for i in range(int(max(abs(delta_row), abs(delta_col)) + 1)):
+    for i in range(max(abs(delta_row), abs(delta_col)) + 1):
         path.append((start_cell[0] + i * step_row, start_cell[1] + i * step_col))
     return path
 
 
 def is_valid_word(path):
+    """
+    Checks if the selected cells form a valid word in the word list.
+    
+    :param path: A list of cell coordinates.
+    :return: True if the path forms a valid word, False otherwise.
+    """
     try:
         selected_word = ''.join(grid[y][x] for y, x in path).lower()
-    except IndexError:
+    except IndexError:  # Catch out-of-bounds selections
         return False
-    searchable_words = [word.lower() for word in words]
-    # print(selected_word, searchable_words)
-    return selected_word in searchable_words
-
+    return selected_word in [word.lower() for word in words]
 
 def game_over():
     app = QApplication(sys.argv)
