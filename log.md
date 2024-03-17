@@ -56,5 +56,11 @@ the ai convo at the beginning works beautifully
 
 ui has different font and strike through functions
 
+## Time 3-16 11:00PM
+
+palette works
+ai screen is making progress
+vai 's exit screen looks good
+
 
 
