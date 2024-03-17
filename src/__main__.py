@@ -15,7 +15,7 @@ from util.colors import Color, generate_colors_for_words, generate_pastel_color
 from gemini.ai import words_related_to_theme
 from algo.lazy import calculate_minimum_grid_size_with_buffer
 
-font_path = "assets/Horizon Type - AcherusGrotesque-Regular.otf"
+font_path = "src/assets/Horizon Type - AcherusGrotesque-Regular.otf"
 # Initialize Pygame
 pygame.init()
 
