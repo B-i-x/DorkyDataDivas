@@ -1,5 +1,6 @@
 #Fix it saying it is a multimodal ai model
 #include other fun responses
+#Make responses be colored randomly like Alex's code
 
 import pygame
 import textwrap
