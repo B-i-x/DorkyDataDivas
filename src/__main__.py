@@ -64,31 +64,66 @@ def get_font(size):
 
 
 def draw_grid(grid, selected_cells):
-    """Draws the puzzle grid and highlights selected cells."""
+    """
+    Draws the puzzle grid, highlighting selected cells and applying rounded corners to each cell.
+
+    The function iterates through each cell in the grid, determines its color based on its selection state,
+    and then draws the cell with the determined color. It also renders the letter in each cell centrally.
+
+    :param grid: A 2D list representing the puzzle grid where each element is a letter.
+    :param selected_cells: A list of tuples representing the coordinates (y, x) of selected cells.
+    """
+    # Calculate the font size as 50% of the block size for proportional letter rendering within cells.
     font = pygame.font.Font(font_path, int(BLOCK_SIZE * 0.5))
+    
+    # Iterate through each row and column of the grid to draw individual cells.
     for y, row in enumerate(grid):
         for x, letter in enumerate(row):
+            # Calculate the position and size of the cell's rectangle, accounting for margins between cells.
             rect = pygame.Rect(grid_init_x + x * (BLOCK_SIZE + MARGIN_BETWEEN_CELLS),
                                grid_init_y + y * (BLOCK_SIZE + MARGIN_BETWEEN_CELLS),
                                BLOCK_SIZE - 2*MARGIN_BETWEEN_CELLS,
                                BLOCK_SIZE - 2*MARGIN_BETWEEN_CELLS)
+            
+            # Determine the background and text color for the current cell.
             color, text_color = determine_cell_color(x, y, selected_cells)
+            
+            # Draw the rectangle for the cell with rounded corners. The radius is set to 10% of the BLOCK_SIZE.
             pygame.draw.rect(screen, color, rect, border_radius=int(BLOCK_SIZE * 0.1))
+            
+            # Render the letter in the cell, centering it within the cell's rectangle.
             text_surface = font.render(letter.lower(), True, text_color)
             screen.blit(text_surface, text_surface.get_rect(center=rect.center))
 
 
 def determine_cell_color(x, y, selected_cells):
-    """Determines the color of a cell based on its state."""
-    color = Color.MAIN_BACKGROUND_COLOR.value
-    text_color = Color.BLACK.value
+    """
+    Determines the background color of a cell and the color of its text based on its selection state
+    and whether it is part of a valid word.
+
+    :param x: The x-coordinate (column index) of the cell in the grid.
+    :param y: The y-coordinate (row index) of the cell in the grid.
+    :param selected_cells: A list of tuples representing the coordinates (y, x) of selected cells.
+    :return: A tuple containing the determined background color and text color for the cell.
+    """
+    # Default colors for a cell; can be overridden based on cell's state.
+    color = Color.MAIN_BACKGROUND_COLOR.value  # Default background color for a cell
+    text_color = Color.BLACK.value             # Default text color
+
+    # Check if the current cell is selected; if so, change its background color.
     if (y, x) in selected_cells:
         color = Color.HOVER_CELL_COLOR.value
+    
+    # Iterate through each valid word and its corresponding cells to check if the current cell
+    # is part of any valid word. If it is, assign a special color to indicate its validity.
     for word, cells in valid_words_cells.items():
         if (y, x) in cells:
+            # If the cell is part of a valid word, use the word's specific color or a default if not specified.
             color = word_colors.get(word, Color.GREY.value)
-            break
+            break  # Stop checking further if we've found the cell is part of a valid word.
+
     return color, text_color
+    # Returns the final determined background color and text color for the cell.
 
 
 def add_rect(start_x, start_y, height_in_pixels=200):
