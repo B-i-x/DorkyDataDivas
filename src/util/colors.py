@@ -3,6 +3,8 @@ import pygame
 
 import random
 
+last_color_index = -1
+
 class Color(enum.Enum):
     BLACK = pygame.Color(23, 29, 28)
     # WHITE = pygame.Color('white')
@@ -22,13 +24,26 @@ def generate_colors_for_words(words: list) -> dict:
     return colors
 
 def generate_pastel_color(alpha=128):
-    # Generate even lighter pastel colors by narrowing the range closer to 255
-    r = random.randint(150, 220)
-    g = random.randint(150, 255)
-    b = random.randint(150, 255)
-    # Add opacity (alpha) to the color
+    global last_color_index
+    
+    # Define base colors emphasizing red, green, and blue
+    base_colors = [
+        (200, random.randint(100, 150), random.randint(100, 150)),  # Red emphasis
+        (random.randint(100, 150), 200, random.randint(100, 150)),  # Green emphasis
+        (random.randint(100, 150), random.randint(100, 150), 200)   # Blue emphasis
+    ]
+    
+    # Cycle through the base colors to ensure variation
+    last_color_index = (last_color_index + 1) % len(base_colors)
+    r, g, b = base_colors[last_color_index]
+    
+    # Lighten the chosen base color
+    r = min(r + random.randint(30, 55), 255)
+    g = min(g + random.randint(30, 55), 255)
+    b = min(b + random.randint(30, 55), 255)
+    
+    # Return the pastel color with alpha transparency
     return pygame.Color(r, g, b, alpha)
-
 
 # if __name__ == "__main__":
 #     print(generate_pastel_color())
