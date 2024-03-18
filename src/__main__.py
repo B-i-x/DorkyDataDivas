@@ -11,10 +11,11 @@ from util.colors import Color, generate_colors_for_words, generate_pastel_color
 from gemini.ai import words_related_to_theme
 from algo.lazy import calculate_minimum_grid_size_with_buffer
 from core.sounds import found_word_sound, game_won_sound
+
 # Initialize Pygame and set up the display
 pygame.init()
 screen_width, screen_height = 800, 600
-screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
+screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("Generative Word Search Game")
 
 # Load and set up puzzle data
@@ -70,7 +71,7 @@ class MainWindow(QDialog):
 
         # Add a label
         label = QLabel('You Won!', self)
-        font = QFont(font_path, 50)
+        font = QFont(font_path, 30)
         label.setFont(font)
         layout.addWidget(label)
         # Set the alignment of the label within its cell
@@ -109,6 +110,7 @@ class MainWindow(QDialog):
         pygame.quit()
         sys.exit()
 
+
 def get_font(size):
     """Returns Press-Start-2P font in the specified size."""
     return pygame.font.Font("assets/font.ttf", size)
@@ -126,22 +128,22 @@ def draw_grid(grid, selected_cells):
     """
     # Calculate the font size as 50% of the block size for proportional letter rendering within cells.
     font = pygame.font.Font(font_path, int(BLOCK_SIZE * 0.5))
-    
+
     # Iterate through each row and column of the grid to draw individual cells.
     for y, row in enumerate(grid):
         for x, letter in enumerate(row):
             # Calculate the position and size of the cell's rectangle, accounting for margins between cells.
             rect = pygame.Rect(grid_init_x + x * (BLOCK_SIZE + MARGIN_BETWEEN_CELLS),
                                grid_init_y + y * (BLOCK_SIZE + MARGIN_BETWEEN_CELLS),
-                               BLOCK_SIZE - 2*MARGIN_BETWEEN_CELLS,
-                               BLOCK_SIZE - 2*MARGIN_BETWEEN_CELLS)
-            
+                               BLOCK_SIZE - 2 * MARGIN_BETWEEN_CELLS,
+                               BLOCK_SIZE - 2 * MARGIN_BETWEEN_CELLS)
+
             # Determine the background and text color for the current cell.
             color, text_color = determine_cell_color(x, y, selected_cells)
-            
+
             # Draw the rectangle for the cell with rounded corners. The radius is set to 10% of the BLOCK_SIZE.
             pygame.draw.rect(screen, color, rect, border_radius=int(BLOCK_SIZE * 0.1))
-            
+
             # Render the letter in the cell, centering it within the cell's rectangle.
             text_surface = font.render(letter.lower(), True, text_color)
             screen.blit(text_surface, text_surface.get_rect(center=rect.center))
@@ -159,12 +161,12 @@ def determine_cell_color(x, y, selected_cells):
     """
     # Default colors for a cell; can be overridden based on cell's state.
     color = Color.MAIN_BACKGROUND_COLOR.value  # Default background color for a cell
-    text_color = Color.BLACK.value             # Default text color
+    text_color = Color.BLACK.value  # Default text color
 
     # Check if the current cell is selected; if so, change its background color.
     if (y, x) in selected_cells:
         color = Color.HOVER_CELL_COLOR.value
-    
+
     # Iterate through each valid word and its corresponding cells to check if the current cell
     # is part of any valid word. If it is, assign a special color to indicate its validity.
     for word, cells in valid_words_cells.items():
@@ -192,7 +194,7 @@ def draw_words(words, strikethrough, selected_word):
     :param selected_word: The word currently selected (for strikethrough).
     """
     # Assume WORD_BOX_WIDTH is defined elsewhere in your code, e.g., as a constant.
-    
+
     # First, draw the text off-screen to calculate the total height needed
     offscreen_surface = pygame.Surface((WORD_BOX_WIDTH, screen_height))
     height_of_words = add_text(words, 0, 0, strikethrough, selected_word, surface=offscreen_surface)
@@ -206,6 +208,7 @@ def draw_words(words, strikethrough, selected_word):
     # Now draw the text on the actual screen
     add_text(words, start_x, start_y, strikethrough, selected_word, surface=screen)
     add_rect(start_x, start_y, height_of_words)
+
 
 # Modify the add_text function signature to accept a `surface` parameter, allowing us to draw on different surfaces
 def add_text(words, start_x, start_y, strikethrough, selected_word, surface):
@@ -229,15 +232,16 @@ def add_text(words, start_x, start_y, strikethrough, selected_word, surface):
         text_surface = font.render(word, True, Color.BLACK.value)
         text_width = text_surface.get_width()  # Get the width of the rendered text
         surface.blit(text_surface, (start_x + MARGIN_LEFT, start_y + total_height))
-        
+
         # Apply strikethrough if needed
         if (strikethrough and word.lower() == selected_word) or (idx in strikethrough_word_indices):
             if idx not in strikethrough_word_indices:
                 strikethrough_word_indices.append(idx)
             line_y = start_y + total_height + font.get_height() / 2
             # Draw the strikethrough line across the width of the text, not the whole box
-            pygame.draw.line(surface, Color.BLACK.value, (start_x + MARGIN_LEFT, line_y), (start_x + MARGIN_LEFT + text_width, line_y), 2)
-        
+            pygame.draw.line(surface, Color.BLACK.value, (start_x + MARGIN_LEFT, line_y),
+                             (start_x + MARGIN_LEFT + text_width, line_y), 2)
+
         total_height += font.get_height() + LINE_SPACING - FONT_SIZE
 
     return total_height
@@ -258,7 +262,6 @@ def get_cell_from_mouse_pos(pos, grid_init_x, grid_init_y):
     if 0 <= row < len(grid) and 0 <= col < len(grid[0]):
         return (row, col)
     return None
-
 
 
 def compute_path(start_cell, end_cell):
@@ -295,6 +298,7 @@ def is_valid_word(path):
         return False
     return selected_word in [word.lower() for word in words]
 
+
 def game_over():
     game_won_sound()  # Play a sound effect for winning the game
     app = QApplication(sys.argv)
@@ -311,7 +315,7 @@ while running:
         elif event.type == pygame.MOUSEBUTTONDOWN:
             # Reset strikethrough for new selection
             strikethrough = False
-            
+
             # Handle selection logic
             if not selecting:
                 # If not already selecting, start new selection
@@ -353,7 +357,7 @@ while running:
             if is_valid_word(selected_cells):
                 # Save and highlight the valid selection
                 final_selected_cells = list(selected_cells)
-              
+
             else:
                 final_selected_cells.clear()  # Clear selection if the path is invalid
 
@@ -367,8 +371,5 @@ while running:
     if set(selected_words) == set(words):
         game_over()  # Call the game over function when all words are found
 
-
 pygame.quit()
 sys.exit()
-
-
