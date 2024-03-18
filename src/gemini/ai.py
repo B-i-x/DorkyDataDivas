@@ -12,6 +12,7 @@ import subprocess
 import enum
 import pygame
 import random
+import sys
 import google.generativeai as genai
 
 #Make responses be colored randomly like Alex's code
@@ -324,6 +325,8 @@ key_down = None
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit() 
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if send_button.collidepoint(event.pos) and len(input_text) < 100:
@@ -367,4 +370,10 @@ while running:
 pygame.quit()
 
 if __name__ == "__main__":
-    print("testing")
+    try:
+        # Your main code execution
+        print("Application started")
+    except KeyboardInterrupt:
+        # Handle any cleanup here
+        pygame.quit()
+        sys.exit()
