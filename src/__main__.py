@@ -30,7 +30,6 @@ font_path = "src/assets/Horizon Type - AcherusGrotesque-Regular.otf"
 font = pygame.font.Font(font_path, 36)
 
 # Initialize game variables
-
 MARGIN_BETWEEN_CELLS = 2.5
 BLOCK_SIZE = 40
 FONT_SIZE = 25
@@ -108,37 +107,7 @@ class MainWindow(QDialog):
         for w in win_list:
             w.close()
         pygame.quit()
-        # view = backgroundView(self.movie)
-        # mainLayout = QVBoxLayout()
-        # self.setCentralWidget(view)
-        # view.setLayout(mainLayout)
-        # button = QPushButton('Button')
-        # mainLayout.addWidget(button)
-        # self.movie.frameChanged.connect(view.update)
-        # self.movie.start()
-        # self.show()
-        # self.movie = QMovie('assets/fireworks.gif')
-        # label = QLabel('Hello')
-        # label.setWindowFlags(Qt.FramelessWindowHint)
-        # self.setIconPixmap(QPixmap('assets/fireworks.gif').scaledToWidth(100))
-        # label.setFixedHeight(40)
-        # label.setFixedWidth(45)
-        # label.setMovie(self.movie)
-        # self.movie.start()
-        # reply = self.information(self, "Congratulations!", "You Won!", QMessageBox.Ok)
-        # Set the background image
-       # self.setStyleSheet("background-image: url('assets/fireworks.gif'); background-repeat: no-repeat;")
-
-        # if reply == QMessageBox.Ok:
-        #     pygame.quit()
-        #     sys.exit()
-        # def msg():
-        #     self.setIconPixmap(QPixmap('assets/fireworks.gif').scaledToWidth(100))
-        #     icon_label = self.findChild(QLabel, "qt_msgboxex_icon_label")
-        #     movie = QMovie('assets/fireworks.gif')
-        #     setattr(self, 'icon_label', movie)
-        #     icon_label.setMovie(movie)
-        #     movie.start()
+        sys.exit()
 
 def get_font(size):
     """Returns Press-Start-2P font in the specified size."""
@@ -274,8 +243,6 @@ def add_text(words, start_x, start_y, strikethrough, selected_word, surface):
     return total_height
 
 
-
-
 def get_cell_from_mouse_pos(pos, grid_init_x, grid_init_y):
     """
     Converts a mouse position to grid coordinates.
@@ -401,5 +368,5 @@ while running:
         game_over()  # Call the game over function when all words are found
 
 
-
 pygame.quit()
+sys.exit()
