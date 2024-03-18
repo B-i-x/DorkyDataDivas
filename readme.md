@@ -1,4 +1,12 @@
-# Installs
+# Instructions
+
+once your terminal is in the root directory, aka. DorkyDataDivas directory
+
+you can just install everything by running
+
+pip install generative-word-search
+
+or you can just install each one manually here
 
 pip install pygame word-search-generator
 
@@ -6,7 +14,11 @@ pip install gitpython
 
 pip install google-generativeai
 
-# Cool Notes
+to run the game, go to src->__main__.py
+
+enjoy!
+
+## Cool Notes
 
 **Greedy Algorithm**
 
