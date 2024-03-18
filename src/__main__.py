@@ -26,7 +26,7 @@ puzzle_data = json.loads(WordSearch(", ".join(words), size=size).json)
 # Extract puzzle grid and words
 grid = puzzle_data['puzzle']
 words = [word.lower() for word in puzzle_data['words']]
-font_path = "assets/Horizon Type - AcherusGrotesque-Regular.otf"
+font_path = "src/assets/Horizon Type - AcherusGrotesque-Regular.otf"
 font = pygame.font.Font(font_path, 36)
 
 # Initialize game variables
