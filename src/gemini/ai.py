@@ -7,8 +7,6 @@ import textwrap
 import time
 import re
 import json
-import sys
-import os
 import threading
 import subprocess
 import google.generativeai as genai
@@ -142,7 +140,7 @@ def update_display(input_text):
         if is_user_message:
             color = light_blue
         else:
-            print(message["color"])
+            # print(message["color"])
             color = message["color"]  # Check if this is None
         y_pos += draw_message_bubble(text, 10, y_pos, color, is_user_message) + 10
 
