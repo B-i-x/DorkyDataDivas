@@ -1,10 +1,10 @@
 import pygame
 import sys
 import json
-
+from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap, QMovie, QPainter, QPalette
-from PyQt5.QtWidgets import QMessageBox, QApplication, QLabel, QGraphicsView, QVBoxLayout, QPushButton, QDialog
+from PyQt5.QtGui import QMovie, QFont
+from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QPushButton, QDialog
 from word_search_generator import WordSearch
 
 from util.colors import Color, generate_colors_for_words, generate_pastel_color
@@ -26,7 +26,7 @@ puzzle_data = json.loads(WordSearch(", ".join(words), size=size).json)
 # Extract puzzle grid and words
 grid = puzzle_data['puzzle']
 words = [word.lower() for word in puzzle_data['words']]
-font_path = "src/assets/Horizon Type - AcherusGrotesque-Regular.otf"
+font_path = "assets/Horizon Type - AcherusGrotesque-Regular.otf"
 font = pygame.font.Font(font_path, 36)
 
 # Initialize game variables
@@ -69,8 +69,24 @@ class MainWindow(QDialog):
         layout = QVBoxLayout(self)
 
         # Add a label
-        label = QLabel('You Won!')
+        label = QLabel('You Won!', self)
+        font = QFont(font_path, 50)
+        label.setFont(font)
         layout.addWidget(label)
+        # Set the alignment of the label within its cell
+        layout.setAlignment(label, QtCore.Qt.AlignCenter)
+
+        # Create a QLabel to display the background GIF
+        background_label = QLabel(self)
+        background_label.setAlignment(Qt.AlignCenter)
+
+        # Set the background GIF
+        movie = QMovie('assets/fireworks.gif')
+        background_label.setMovie(movie)
+        movie.start()
+
+        # Add the background QLabel to the layout
+        layout.addWidget(background_label)
 
         # Add a button
         button = QPushButton('Close')
