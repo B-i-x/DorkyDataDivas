@@ -10,6 +10,7 @@ import json
 import sys
 import os
 import threading
+import subprocess
 import google.generativeai as genai
 
 
@@ -96,6 +97,7 @@ input_text = ''
 active = True  # Input box is initially active
 
 convo_history = []  # List to hold conversation history
+convo_history.append({"role": "model", "text": "Welcome to Generative Word Search! I'm here to help you create a custom word search puzzle. Simply choose a theme and the number of words you'd like to include, and I'll generate words based on your specifications for a game of Word Search. Let's get started!"})
 
 def draw_message_bubble(text, x, y, is_user_message, is_typing_indicator=False):
     padding = 10
@@ -189,7 +191,7 @@ def handle_user_input_thread(text):
             
             # Convert all letters to lowercase
             word = word.lower()
-            # Remove text after a hyphen or any special character
+            # Remove special character and text after any special character (e.g "problem-solving" would become "problem")
             word = re.sub(r'[-@].*', '', word)  # Adjust to include other special characters as needed
             # Remove all characters except lowercase letters
             word = re.sub(r'[^a-z]', '', word)
@@ -201,8 +203,11 @@ def handle_user_input_thread(text):
         
         # Print the JSON object
         print(json.dumps(game_data, indent=4))
-        
-        os._exit(0)
+
+        pygame.event.post(pygame.event.Event(pygame.QUIT))  # Signal main thread to quit
+
+        # Execute subprocess after Pygame window closes
+        subprocess.run(["python", "__main__.py", json.dumps(game_data)])  # Pass game_data as argument
     
     # Append model's response for display
     convo_history.append({"role": "model", "text": last_response_text})
