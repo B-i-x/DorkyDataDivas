@@ -284,6 +284,11 @@ while running:
                     if valid_word not in valid_words_cells:
                         # Save the selection if it's a new valid word
                         valid_words_cells[valid_word] = list(final_selected_cells)
+                        selected_word = ''.join(grid[y][x] for y, x in final_selected_cells).lower()
+                        selected_words.append(selected_word)
+                        selected_words = [x.lower() for x in selected_words]
+                        strikethrough = True
+
                         found_word_sound()  # Play a sound effect for finding a word
                 else:
                     # Provide feedback for invalid selections
@@ -306,10 +311,7 @@ while running:
             if is_valid_word(selected_cells):
                 # Save and highlight the valid selection
                 final_selected_cells = list(selected_cells)
-                selected_word = ''.join(grid[y][x] for y, x in selected_cells).lower()
-                selected_words.append(selected_word)
-                selected_words = [x.lower() for x in selected_words]
-                strikethrough = True
+              
             else:
                 final_selected_cells.clear()  # Clear selection if the path is invalid
 
