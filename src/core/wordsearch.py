@@ -15,8 +15,8 @@ if __name__ == "__main__" and __package__ is None:
     path.append(dir(path[0]))
     __package__ = "src"
 
-from util.colors import Color, generate_pastel_color
-from util.colors import Color, generate_colors_for_words, generate_pastel_color
+# from util.colors import Color, generate_pastel_color
+# from util.colors import Color, generate_colors_for_words, generate_pastel_color
 # from gemini.ai import words_related_to_theme
 from algo.lazy import calculate_minimum_grid_size_with_buffer
 from core.sounds import found_word_sound, game_won_sound
@@ -25,7 +25,7 @@ def word_search(words):
     # Initialize Pygame and set up the display
     pygame.init()
     screen_width, screen_height = 800, 600
-    screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
+    screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption("Generative Word Search Game")
 
     # Load and set up puzzle data
@@ -47,6 +47,7 @@ def word_search(words):
     FONT_SIZE = 25
     MARGIN_LEFT = 60
     MARGIN_TOP = 25
+    PADDING = 10  # Add padding to the bounding box
     LINE_SPACING = 20
     WORD_BOX_WIDTH = 200  # Assuming a fixed width for the word list box
     WORD_BOX_VERTICAL_AXIS_PLACEMENT_RELATIVE_TO_SCREEN = 4 / 5
@@ -208,7 +209,7 @@ def word_search(words):
         # First, draw the text off-screen to calculate the total height needed
         offscreen_surface = pygame.Surface((WORD_BOX_WIDTH, screen_height))
         height_of_words = add_text(words, 0, 0, strikethrough, selected_word, surface=offscreen_surface)
-
+        longest_word_width = max([font.size(word)[0] for word in words]) + PADDING * 2
         # Calculate the starting X position so that the box's vertical midline is at the desired fraction of the screen's width
         start_x = screen_width * WORD_BOX_VERTICAL_AXIS_PLACEMENT_RELATIVE_TO_SCREEN - WORD_BOX_WIDTH / 2
 
@@ -384,6 +385,58 @@ def word_search(words):
 
     pygame.quit()
     sys.exit()
+
+import enum
+import pygame
+
+import random
+
+last_color_index = -1
+
+class Color(enum.Enum):
+    BLACK = pygame.Color(23, 29, 28)
+    # WHITE = pygame.Color('white')
+    GREY = pygame.Color(222, 222, 224)  # Custom color
+    RED = pygame.Color('red')
+    BLUE = pygame.Color('blue')
+    GREEN = pygame.Color('green')
+
+    MAIN_BACKGROUND_COLOR = pygame.Color(246, 239, 238)
+    HOVER_CELL_COLOR = pygame.Color(192, 192, 192)  #
+    CORRECT_WORD_COLOR = pygame.Color(0, 78, 152)  # 
+
+def generate_colors_for_words(words: list) -> dict:
+    colors = {}
+    for word in words:
+        colors[word] = generate_pastel_color()
+    return colors
+
+def generate_pastel_color(alpha=128):
+    global last_color_index
+    
+    # Define base colors emphasizing red, green, and blue
+    base_colors = [
+        (200, random.randint(100, 150), random.randint(100, 150)),  # Red emphasis
+        (random.randint(100, 150), 200, random.randint(100, 150)),  # Green emphasis
+        (random.randint(100, 150), random.randint(100, 150), 200)   # Blue emphasis
+    ]
+    
+    # Cycle through the base colors to ensure variation
+    last_color_index = (last_color_index + 1) % len(base_colors)
+    r, g, b = base_colors[last_color_index]
+    
+    # Lighten the chosen base color
+    r = min(r + random.randint(30, 55), 255)
+    g = min(g + random.randint(30, 55), 255)
+    b = min(b + random.randint(30, 55), 255)
+    
+    # Return the pastel color with alpha transparency
+    return pygame.Color(r, g, b, alpha)
+
+# if __name__ == "__main__":
+#     print(generate_pastel_color())
+
+
 
 if __name__ == "__main__":
     print(sys.argv)

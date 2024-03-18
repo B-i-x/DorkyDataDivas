@@ -7,8 +7,6 @@ import textwrap
 import time
 import re
 import json
-import sys
-import os
 import threading
 import subprocess
 import enum
