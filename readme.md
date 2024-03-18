@@ -10,6 +10,8 @@ or you can just install each one manually here
 
 pip install pygame word-search-generator
 
+pip install word-search-generator
+
 pip install gitpython
 
 pip install google-generativeai
