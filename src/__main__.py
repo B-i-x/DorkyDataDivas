@@ -64,6 +64,7 @@ class MainWindow(QDialog):
         self.move(int(center_x), int(center_y))
         self.setWindowTitle('Congratulations!')
         self.resize(400, 200)  # Set the size of the dialog
+        self.setStyleSheet('background-color: #F6EFEE;')
 
         # Add a layout
         layout = QVBoxLayout(self)
@@ -90,6 +91,15 @@ class MainWindow(QDialog):
 
         # Add a button
         button = QPushButton('Close')
+        button.setStyleSheet('''QPushButton {
+                font-size: 20px;
+                border-radius: 10px;
+                padding: 10px;
+            }
+            QPushButton:hover {
+                background-color: darkgray;
+            }
+            ''')
         layout.addWidget(button)
         button.clicked.connect(self.close_all_windows)
 
