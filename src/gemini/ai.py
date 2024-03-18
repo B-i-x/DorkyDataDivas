@@ -74,7 +74,7 @@ white = (255, 255, 255)
 black = (0, 0, 0)
 light_blue = (220, 240, 255)  # User message color
 gray = (128, 128, 128)  # Gemini model response color
-input_box_color = (240, 240, 240)  # Input box color
+input_box_color = (230, 230, 230)  # Input box color
 send_button_color = (100, 180, 100)  # Send button color
 
 font_path = "src/assets/Horizon Type - AcherusGrotesque-Regular.otf"
