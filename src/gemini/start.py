@@ -6,6 +6,8 @@ import pygame
 import textwrap
 import time
 import re
+import json
+import sys
 import threading
 import google.generativeai as genai
 
