@@ -159,25 +159,25 @@ def update_display(input_text):
     pygame.display.flip()
 
 def handle_user_input_thread(text):
+    global convo_history
+    if not text:
+        return
 
-    global convo_history, show_typing_indicator
+    # Append user's message immediately for display
+    convo_history.append({"role": "user", "text": text})
+    pygame.event.post(pygame.event.Event(MESSAGE_RECEIVED_EVENT))
 
-    while not stop_event.is_set():
-        # Append user's message immediately for display
-        convo_history.append({"role": "user", "text": text})
-        pygame.event.post(pygame.event.Event(MESSAGE_RECEIVED_EVENT))
-
-        # Send the message to the model and wait for the response
-        response = convo.send_message([{"text": text}])
-        last_response_text = convo.last.text
-
-    # Update display to include the user's message
+    # Send the message to the model and wait for the response
+    # Assuming convo.send_message is the correct method and returns a response object
+    response = convo.send_message([{"text": text}])
+    last_response_text = convo.last.text
     update_display(input_text)
     
     # Signal to stop the typing indicator
     pygame.event.post(pygame.event.Event(TYPING_INDICATOR_STOP))
 
     # Check if the last response matches the specified pattern
+
     match = re.match(r'^(\d+),\s*(.*)', last_response_text)
     if match:
         number = int(match.group(1))
@@ -209,11 +209,9 @@ def handle_user_input_thread(text):
 
         # Execute subprocess after Pygame window closes
         subprocess.run(["python", "__main__.py", json.dumps(game_data)])  # Pass game_data as argument
-    
+
     # Append model's response for display
     convo_history.append({"role": "model", "text": last_response_text})
-    pygame.event.post(pygame.event.Event(MESSAGE_RECEIVED_EVENT))
-
 
 def handle_user_input(text):
     global show_typing_indicator
