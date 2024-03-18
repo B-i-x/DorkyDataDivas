@@ -1,6 +1,14 @@
 #Fix it saying it is a multimodal ai model
 #include other fun responses
 #Make responses be colored randomly like Alex's code
+if __name__ == "__main__" and __package__ is None:
+    from sys import path
+    from os.path import dirname as dir
+
+    path.append(dir(path[0]))
+    __package__ = "src"
+
+from util.colors import Color, generate_pastel_color
 
 import pygame
 import textwrap
@@ -18,8 +26,8 @@ pygame.display.set_caption("Gemini Chat Interface")
 # Define colors and font
 white = (255, 255, 255)
 black = (0, 0, 0)
-light_blue = (220, 240, 255)  # User message color
-gray = (128, 128, 128)  # Gemini model response color
+light_blue = (128, 80, 250)  # User message color
+gray = (230, 230, 230)  # Gemini model response color
 input_box_color = (230, 230, 230)  # Input box color
 send_button_color = (100, 180, 100)  # Send button color
 font = pygame.font.Font(None, 24)
@@ -89,8 +97,12 @@ def update_display(input_text):
 
     total_height = 10  # Start with padding from the top
 
-    def draw_message_bubble(text, x, y, is_user_message):
-        color = light_blue if is_user_message else gray
+    def draw_message_bubble(text, x, y, color, is_user_message):        
+        # color = None
+        # if is_user_message:
+        #     color = gray
+        # else:
+        #     color = generate_pastel_color()
         padding = 10
 
         if not is_user_message:
@@ -138,8 +150,12 @@ def update_display(input_text):
     for message in convo_history:
         is_user_message = message["role"] == "user"
         text = message["text"]
-        y_pos += draw_message_bubble(text, 10, y_pos, is_user_message) + 10
-
+        if message["role"] == "user":
+            color = gray  # Use a default color for user messages
+        else:
+            color = message["color"]  # Use the stored color for non-user messages
+        y_pos += draw_message_bubble(text, 10, y_pos, color, message["role"] == "user") + 10
+        
     pygame.draw.rect(screen, input_box_color, input_box, border_radius=5)
     # Update display
         # Track input length
@@ -170,10 +186,11 @@ def handle_user_input(text):
 
     message = [{"text": text}]  # Message format
 
-    convo_history.append({"role": "user", "text": text})
+    convo_history.append({"role": "user", "text": text, "color": None})  # Color is not used for user messages    
     response = convo.send_message(message)
     last_response_text = convo.last.text
-    convo_history.append({"role": "model", "text": last_response_text})
+    last_response_color = generate_pastel_color()
+    convo_history.append({"role": "model", "text": last_response_text, "color": last_response_color})
     update_display(input_text)
 
 # Main event loop
