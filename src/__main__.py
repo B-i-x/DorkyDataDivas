@@ -1,8 +1,10 @@
 import pygame
 import sys
 import json
-
-from PyQt5.QtWidgets import QMessageBox, QApplication
+from PyQt5 import QtCore
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QMovie, QFont
+from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QPushButton, QDialog
 from word_search_generator import WordSearch
 
 from util.colors import Color, generate_colors_for_words, generate_pastel_color
@@ -54,17 +56,89 @@ strikethrough = False
 counter = 0
 
 # GUI setup
-class MainWindow(QMessageBox):
+class MainWindow(QDialog):
     def __init__(self):
         super().__init__()
         center_x = self.geometry().width() / 2
         center_y = self.geometry().height() / 2
         self.move(int(center_x), int(center_y))
-        reply = self.information(self, "Congratulations!", "You Won!", QMessageBox.Ok)
-        if reply == QMessageBox.Ok:
-            pygame.quit()
-            sys.exit()
+        self.setWindowTitle('Congratulations!')
+        self.resize(400, 200)  # Set the size of the dialog
+        self.setStyleSheet('background-color: #F6EFEE;')
 
+        # Add a layout
+        layout = QVBoxLayout(self)
+
+        # Add a label
+        label = QLabel('You Won!', self)
+        font = QFont(font_path, 50)
+        label.setFont(font)
+        layout.addWidget(label)
+        # Set the alignment of the label within its cell
+        layout.setAlignment(label, QtCore.Qt.AlignCenter)
+
+        # Create a QLabel to display the background GIF
+        background_label = QLabel(self)
+        background_label.setAlignment(Qt.AlignCenter)
+
+        # Set the background GIF
+        movie = QMovie('assets/fireworks.gif')
+        background_label.setMovie(movie)
+        movie.start()
+
+        # Add the background QLabel to the layout
+        layout.addWidget(background_label)
+
+        # Add a button
+        button = QPushButton('Close')
+        button.setStyleSheet('''QPushButton {
+                font-size: 20px;
+                border-radius: 10px;
+                padding: 10px;
+            }
+            QPushButton:hover {
+                background-color: darkgray;
+            }
+            ''')
+        layout.addWidget(button)
+        button.clicked.connect(self.close_all_windows)
+
+    def close_all_windows(self):
+        win_list = QApplication.allWindows()
+        for w in win_list:
+            w.close()
+        pygame.quit()
+        # view = backgroundView(self.movie)
+        # mainLayout = QVBoxLayout()
+        # self.setCentralWidget(view)
+        # view.setLayout(mainLayout)
+        # button = QPushButton('Button')
+        # mainLayout.addWidget(button)
+        # self.movie.frameChanged.connect(view.update)
+        # self.movie.start()
+        # self.show()
+        # self.movie = QMovie('assets/fireworks.gif')
+        # label = QLabel('Hello')
+        # label.setWindowFlags(Qt.FramelessWindowHint)
+        # self.setIconPixmap(QPixmap('assets/fireworks.gif').scaledToWidth(100))
+        # label.setFixedHeight(40)
+        # label.setFixedWidth(45)
+        # label.setMovie(self.movie)
+        # self.movie.start()
+        # reply = self.information(self, "Congratulations!", "You Won!", QMessageBox.Ok)
+        # Set the background image
+       # self.setStyleSheet("background-image: url('assets/fireworks.gif'); background-repeat: no-repeat;")
+
+        # if reply == QMessageBox.Ok:
+        #     pygame.quit()
+        #     sys.exit()
+        # def msg():
+        #     self.setIconPixmap(QPixmap('assets/fireworks.gif').scaledToWidth(100))
+        #     icon_label = self.findChild(QLabel, "qt_msgboxex_icon_label")
+        #     movie = QMovie('assets/fireworks.gif')
+        #     setattr(self, 'icon_label', movie)
+        #     icon_label.setMovie(movie)
+        #     movie.start()
 
 def get_font(size):
     """Returns Press-Start-2P font in the specified size."""
@@ -258,6 +332,7 @@ def game_over():
     game_won_sound()  # Play a sound effect for winning the game
     app = QApplication(sys.argv)
     window = MainWindow()
+    window.exec_()
     sys.exit(app.exec_())
 
 
@@ -284,6 +359,11 @@ while running:
                     if valid_word not in valid_words_cells:
                         # Save the selection if it's a new valid word
                         valid_words_cells[valid_word] = list(final_selected_cells)
+                        selected_word = ''.join(grid[y][x] for y, x in final_selected_cells).lower()
+                        selected_words.append(selected_word)
+                        selected_words = [x.lower() for x in selected_words]
+                        strikethrough = True
+
                         found_word_sound()  # Play a sound effect for finding a word
                 else:
                     # Provide feedback for invalid selections
@@ -306,10 +386,7 @@ while running:
             if is_valid_word(selected_cells):
                 # Save and highlight the valid selection
                 final_selected_cells = list(selected_cells)
-                selected_word = ''.join(grid[y][x] for y, x in selected_cells).lower()
-                selected_words.append(selected_word)
-                selected_words = [x.lower() for x in selected_words]
-                strikethrough = True
+              
             else:
                 final_selected_cells.clear()  # Clear selection if the path is invalid
 
