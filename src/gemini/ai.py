@@ -189,7 +189,8 @@ def calculate_message_bubble_height(text, is_user_message, is_typing_indicator=F
     return bubble_height
 def update_display(input_text):
     global cursor_visible, last_cursor_blink_time, convo_history, scroll_y, show_typing_indicator, typing_indicator_last_update, typing_indicator_state
-    screen.fill(white)
+    MAIN_BACKGROUND_COLOR = pygame.Color(246, 239, 238)
+    screen.fill(MAIN_BACKGROUND_COLOR)
     y_pos = 10 + scroll_y
 
     # Calculate the total height needed for the messages
