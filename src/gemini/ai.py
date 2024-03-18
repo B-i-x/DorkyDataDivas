@@ -212,7 +212,6 @@ def handle_user_input_thread(text):
     
     # Append model's response for display
     convo_history.append({"role": "model", "text": last_response_text})
-    pygame.event.post(pygame.event.Event(MESSAGE_RECEIVED_EVENT))
 
 
 def handle_user_input(text):
