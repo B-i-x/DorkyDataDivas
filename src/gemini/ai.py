@@ -174,10 +174,6 @@ def handle_user_input_thread(text):
     # Signal to stop the typing indicator
     pygame.event.post(pygame.event.Event(TYPING_INDICATOR_STOP))
 
-    # Append model's response for display
-    convo_history.append({"role": "model", "text": last_response_text})
-    pygame.event.post(pygame.event.Event(MESSAGE_RECEIVED_EVENT))
-
     # Check if the last response matches the specified pattern
     match = re.match(r'^(\d+),\s*(.*)', last_response_text)
     if match:
@@ -193,6 +189,10 @@ def handle_user_input_thread(text):
 
         # Immediately terminate the program
         os._exit(0)
+    
+    # Append model's response for display
+    convo_history.append({"role": "model", "text": last_response_text})
+    pygame.event.post(pygame.event.Event(MESSAGE_RECEIVED_EVENT))
 
 
 def handle_user_input(text):
@@ -202,6 +202,8 @@ def handle_user_input(text):
     pygame.event.post(pygame.event.Event(pygame.USEREVENT, {}))
     input_thread = threading.Thread(target=handle_user_input_thread, args=(text,), daemon=True)
     input_thread.start()
+
+
 # Main event loop
 running = True
 key_down = None
