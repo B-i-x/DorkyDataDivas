@@ -15,7 +15,6 @@ import google.generativeai as genai
 
 stop_event = threading.Event()
 # Initialize Pygame
-stop_event = threading.Event()
 pygame.init()
 screen_width = 800
 screen_height = 720
