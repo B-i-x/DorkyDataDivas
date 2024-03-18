@@ -1,6 +1,14 @@
 #Fix it saying it is a multimodal ai model
 #include other fun responses
 #Make responses be colored randomly like Alex's code
+if __name__ == "__main__" and __package__ is None:
+    from sys import path
+    from os.path import dirname as dir
+
+    path.append(dir(path[0]))
+    __package__ = "src"
+
+from util.colors import Color, generate_pastel_color
 
 import pygame
 import textwrap
@@ -24,8 +32,8 @@ TYPING_INDICATOR_STOP = pygame.USEREVENT + 2
 # Define colors and font
 white = (255, 255, 255)
 black = (0, 0, 0)
-light_blue = (220, 240, 255)  # User message color
-gray = (128, 128, 128)  # Gemini model response color
+light_blue = (128, 80, 250)  # User message color
+gray = (230, 230, 230)  # Gemini model response color
 input_box_color = (230, 230, 230)  # Input box color
 send_button_color = (100, 180, 100)  # Send button color
 font = pygame.font.Font(None, 24)
@@ -94,28 +102,60 @@ active = True  # Input box is initially active
 
 convo_history = []  # List to hold conversation history
 
-def draw_message_bubble(text, x, y, is_user_message, is_typing_indicator=False):
-    padding = 10
-    color = light_blue if is_user_message else gray
-    
-    max_width = screen_width // 2 - padding * 2
-    wrapped_text = [text] if is_typing_indicator else textwrap.wrap(text, width=(max_width // font.size('A')[0]) - 1)
-    
-    bubble_width = max(font.size(line)[0] for line in wrapped_text) + padding * 2
-    bubble_height = sum(font.size(line)[1] for line in wrapped_text) + padding * 2
-    
-    bubble_width = min(bubble_width, max_width)
-    bubble_x = screen_width - bubble_width - x - padding if is_user_message else x
-    
-    pygame.draw.rect(screen, color, (bubble_x, y, bubble_width, bubble_height), border_radius=20)
-    
-    y_offset = y + padding
-    for line in wrapped_text:
-        line_surface = font.render(line, True, black)
-        screen.blit(line_surface, (bubble_x + padding, y_offset))
-        y_offset += font.size(line)[1]
-    
-    return bubble_height
+def update_display(input_text):
+    global cursor_visible, last_cursor_blink_time, convo_history, scroll_y
+    screen.fill(white)
+
+    total_height = 10  # Start with padding from the top
+
+    def draw_message_bubble(text, x, y, color, is_user_message):        
+        # color = None
+        # if is_user_message:
+        #     color = gray
+        # else:
+        #     color = generate_pastel_color()
+        padding = 10
+
+        if not is_user_message:
+            bold_texts = re.findall(r'\*\*(.*?)\*\*', text)
+            italic_texts = re.findall(r'\*(.*?)\*', text)
+            for b_text in bold_texts:
+                text = text.replace(f"**{b_text}**", b_text)
+            for i_text in italic_texts:
+                text = text.replace(f"*{i_text}*", i_text)
+
+        # Calculate max width (user messages use half the screen, response messages use half width)
+        max_width = screen_width // 2 - padding * 2 if is_user_message else screen_width // 2 - padding * 2
+
+        # Aggressive text wrapping
+        wrapped_text = textwrap.wrap(text, width=(max_width // font.size('A')[0]) - 1)
+
+        bubble_height = sum(font.size(line)[1] for line in wrapped_text) + padding * 2
+        bubble_width = max(font.size(line)[0] for line in wrapped_text) + padding * 2
+
+        # Ensure bubble doesn't exceed its half of the screen
+        bubble_width = min(bubble_width, max_width)
+
+        # Position bubble near the right edge for user messages
+        bubble_x = screen_width - bubble_width - x - padding if is_user_message else x
+
+        pygame.draw.rect(screen, color, (bubble_x, y, bubble_width, bubble_height), border_radius=20)
+
+        y_offset = y + padding
+        for i, line in enumerate(wrapped_text):
+            line_surface = font.render(line, True, black)
+
+            # Right-align first line for user messages
+            if is_user_message and i == 0:
+                text_x = screen_width - bubble_width - x  # Stick to the right edge
+            else:
+                # Left-align other lines
+                text_x = bubble_x + padding
+
+            screen.blit(line_surface, (text_x, y_offset))
+            y_offset += font.size(line)[1]
+
+        return bubble_height
 
 def update_display(input_text):
     global cursor_visible, last_cursor_blink_time, convo_history, scroll_y, show_typing_indicator, typing_indicator_last_update, typing_indicator_state
@@ -125,8 +165,12 @@ def update_display(input_text):
     for message in convo_history:
         is_user_message = message["role"] == "user"
         text = message["text"]
-        y_pos += draw_message_bubble(text, 10, y_pos, is_user_message) + 10
-
+        if message["role"] == "user":
+            color = gray  # Use a default color for user messages
+        else:
+            color = message["color"]  # Use the stored color for non-user messages
+        y_pos += draw_message_bubble(text, 10, y_pos, color, message["role"] == "user") + 10
+        
     pygame.draw.rect(screen, input_box_color, input_box, border_radius=5)
     
     displayed_text = input_text[:100]  # Limit input text to 100 characters
@@ -158,13 +202,15 @@ def handle_user_input_thread(text):
         return
 
     # Append user's message immediately for display
-    convo_history.append({"role": "user", "text": text})
+    convo_history.append({"role": "user", "text": text, "color": None})
     pygame.event.post(pygame.event.Event(MESSAGE_RECEIVED_EVENT))
 
     # Send the message to the model and wait for the response
     # Assuming convo.send_message is the correct method and returns a response object
     response = convo.send_message([{"text": text}])
     last_response_text = convo.last.text
+    last_response_color = generate_pastel_color()
+    convo_history.append({"role": "model", "text": last_response_text, "color": last_response_color})
     update_display(input_text)
     
     # Signal to stop the typing indicator
