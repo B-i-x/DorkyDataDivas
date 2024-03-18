@@ -18,7 +18,7 @@ stop_event = threading.Event()
 stop_event = threading.Event()
 pygame.init()
 screen_width = 800
-screen_height = 600
+screen_height = 720
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("Gemini Chat Interface")
 
@@ -208,7 +208,7 @@ def handle_user_input_thread(text):
         pygame.event.post(pygame.event.Event(pygame.QUIT))  # Signal main thread to quit
 
         # Execute subprocess after Pygame window closes
-        subprocess.run(["python", "__main__.py", json.dumps(game_data)])  # Pass game_data as argument
+        subprocess.run(["python", "src\core\wordsearch.py", json.dumps(game_data)])  # Pass game_data as argument
 
     # Append model's response for display
     convo_history.append({"role": "model", "text": last_response_text})

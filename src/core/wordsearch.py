@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QMessageBox, QApplication, QLabel, QGraphicsView, QV
 from word_search_generator import WordSearch
 
 from util.colors import Color, generate_colors_for_words, generate_pastel_color
-from gemini.ai import words_related_to_theme
+# from gemini.ai import words_related_to_theme
 from algo.lazy import calculate_minimum_grid_size_with_buffer
 from core.sounds import found_word_sound, game_won_sound
 
@@ -20,7 +20,7 @@ def word_search(words):
     pygame.display.set_caption("Generative Word Search Game")
 
     # Load and set up puzzle data
-    words = words_related_to_theme("programming")
+    # words = words_related_to_theme("programming")
     word_colors = generate_colors_for_words(words)
     size = calculate_minimum_grid_size_with_buffer(words=words)
     puzzle_data = json.loads(WordSearch(", ".join(words), size=size).json)
@@ -38,7 +38,7 @@ def word_search(words):
     FONT_SIZE = 25
     MARGIN_LEFT = 60
     MARGIN_TOP = 25
-    LINE_SPACING = 40
+    LINE_SPACING = 20
     WORD_BOX_WIDTH = 200  # Assuming a fixed width for the word list box
     WORD_BOX_VERTICAL_AXIS_PLACEMENT_RELATIVE_TO_SCREEN = 4 / 5
     start_cell = end_cell = None
@@ -381,6 +381,17 @@ def word_search(words):
     sys.exit()
 
 if __name__ == "__main__":
-    words = sys.argv[1].split(' ')
-    number = int(sys.argv[2])
+    print(sys.argv)
+
+    # Parse the JSON string
+    data = json.loads(sys.argv[1])
+
+    # Extract the 'words' and 'number' from the parsed JSON
+    words = data['words']
+    number = data['number']
+
+    
+    if not words:
+        words = ["test", "words", "poop", "asdasd"]
+
     word_search(words[:number])
