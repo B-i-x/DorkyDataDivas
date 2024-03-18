@@ -202,7 +202,7 @@ def handle_user_input_thread(text):
         return
 
     # Append user's message immediately for display
-    convo_history.append({"role": "user", "text": text, "color": None})
+    convo_history.append({"role": "user", "text": text,"color": None})
     pygame.event.post(pygame.event.Event(MESSAGE_RECEIVED_EVENT))
 
     # Send the message to the model and wait for the response
