@@ -8,6 +8,7 @@ import time
 import re
 import json
 import sys
+import os
 import threading
 import google.generativeai as genai
 
@@ -190,9 +191,8 @@ def handle_user_input_thread(text):
         # Print the JSON object
         print(json.dumps(game_data, indent=4))
 
-        # Terminate the program
-        sys.exit()
-        pygame.quit()
+        # Immediately terminate the program
+        os._exit(0)
 
 
 def handle_user_input(text):
