@@ -8,6 +8,14 @@ from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QPushButton, QDia
 
 from word_search_generator import WordSearch
 
+if __name__ == "__main__" and __package__ is None:
+    from sys import path
+    from os.path import dirname as dir
+
+    path.append(dir(path[0]))
+    __package__ = "src"
+
+from util.colors import Color, generate_pastel_color
 from util.colors import Color, generate_colors_for_words, generate_pastel_color
 # from gemini.ai import words_related_to_theme
 from algo.lazy import calculate_minimum_grid_size_with_buffer

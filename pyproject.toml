@@ -11,7 +11,8 @@ dependencies = [
     "gitpython",
     "pygame",
     "word-search-generator",
-    "google-generativeai"
+    "google-generativeai",
+    "PyQt5",
 ]
 
 # [project]
