@@ -25,7 +25,7 @@ def word_search(words):
     # Initialize Pygame and set up the display
     pygame.init()
     screen_width, screen_height = 800, 600
-    screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
+    screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption("Generative Word Search Game")
 
     # Load and set up puzzle data
