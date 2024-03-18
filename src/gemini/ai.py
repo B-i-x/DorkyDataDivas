@@ -13,8 +13,9 @@ import threading
 import subprocess
 import google.generativeai as genai
 
-
+stop_event = threading.Event()
 # Initialize Pygame
+stop_event = threading.Event()
 pygame.init()
 screen_width = 800
 screen_height = 600
@@ -158,17 +159,17 @@ def update_display(input_text):
     pygame.display.flip()
 
 def handle_user_input_thread(text):
+
     global convo_history, show_typing_indicator
-    if not text:
-        return
 
-    # Append user's message immediately for display
-    convo_history.append({"role": "user", "text": text})
-    pygame.event.post(pygame.event.Event(MESSAGE_RECEIVED_EVENT))
+    while not stop_event.is_set():
+        # Append user's message immediately for display
+        convo_history.append({"role": "user", "text": text})
+        pygame.event.post(pygame.event.Event(MESSAGE_RECEIVED_EVENT))
 
-    # Send the message to the model and wait for the response
-    response = convo.send_message([{"text": text}])
-    last_response_text = convo.last.text
+        # Send the message to the model and wait for the response
+        response = convo.send_message([{"text": text}])
+        last_response_text = convo.last.text
 
     # Update display to include the user's message
     update_display(input_text)
@@ -271,3 +272,6 @@ while running:
     pygame.time.wait(20)
 
 pygame.quit()
+
+if __name__ == "__main__":
+    print("testing")
