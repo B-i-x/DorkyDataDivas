@@ -13,6 +13,16 @@ import threading
 import subprocess
 import google.generativeai as genai
 
+#Make responses be colored randomly like Alex's code
+if __name__ == "__main__" and __package__ is None:
+    from sys import path
+    from os.path import dirname as dir
+
+    path.append(dir(path[0]))
+    __package__ = "src"
+
+from util.colors import Color, generate_pastel_color
+
 stop_event = threading.Event()
 # Initialize Pygame
 stop_event = threading.Event()
@@ -98,11 +108,10 @@ input_text = ''
 active = True  # Input box is initially active
 
 convo_history = []  # List to hold conversation history
-convo_history.append({"role": "model", "text": "Welcome to Generative Word Search! I'm here to help you create a custom word search puzzle. Simply choose a theme and the number of words you'd like to include, and I'll generate words based on your specifications for a game of Word Search. Let's get started!"})
+convo_history.append({"role": "model", "text": "Welcome to Generative Word Search! I'm here to help you create a custom word search puzzle. Simply choose a theme and the number of words you'd like to include, and I'll generate words based on your specifications for a game of Word Search. Let's get started!", "color": generate_pastel_color()})
 
-def draw_message_bubble(text, x, y, is_user_message, is_typing_indicator=False):
+def draw_message_bubble(text, x, y, color, is_user_message, is_typing_indicator=False):
     padding = 10
-    color = light_blue if is_user_message else gray
     
     max_width = screen_width // 2 - padding * 2
     wrapped_text = [text] if is_typing_indicator else textwrap.wrap(text, width=(max_width // font.size('A')[0]) - 1)
@@ -112,7 +121,7 @@ def draw_message_bubble(text, x, y, is_user_message, is_typing_indicator=False):
     
     bubble_width = min(bubble_width, max_width)
     bubble_x = screen_width - bubble_width - x - padding if is_user_message else x
-    
+
     pygame.draw.rect(screen, color, (bubble_x, y, bubble_width, bubble_height), border_radius=20)
     
     y_offset = y + padding
@@ -126,12 +135,17 @@ def draw_message_bubble(text, x, y, is_user_message, is_typing_indicator=False):
 def update_display(input_text):
     global cursor_visible, last_cursor_blink_time, convo_history, scroll_y, show_typing_indicator, typing_indicator_last_update, typing_indicator_state
     screen.fill(white)
-
     y_pos = 10 + scroll_y
     for message in convo_history:
         is_user_message = message["role"] == "user"
         text = message["text"]
-        y_pos += draw_message_bubble(text, 10, y_pos, is_user_message) + 10
+
+        if is_user_message:
+            color = light_blue
+        else:
+            print(message["color"])
+            color = message["color"]  # Check if this is None
+        y_pos += draw_message_bubble(text, 10, y_pos, color, is_user_message) + 10
 
     pygame.draw.rect(screen, input_box_color, input_box, border_radius=5)
     
@@ -154,7 +168,7 @@ def update_display(input_text):
         typing_text = typing_texts[typing_indicator_state]
         if typing_text:
             typing_y_pos = y_pos  # Position for the typing indicator
-            draw_message_bubble(typing_text, 10, typing_y_pos, False, is_typing_indicator=True)
+            draw_message_bubble(typing_text, 10, typing_y_pos, color, False, is_typing_indicator=True)
     
     pygame.display.flip()
 
@@ -165,8 +179,9 @@ def handle_user_input_thread(text):
 
     # Append user's message immediately for display
     convo_history.append({"role": "user", "text": text})
-    pygame.event.post(pygame.event.Event(MESSAGE_RECEIVED_EVENT))
 
+    pygame.event.post(pygame.event.Event(MESSAGE_RECEIVED_EVENT))
+    new_color = generate_pastel_color()
     # Send the message to the model and wait for the response
     # Assuming convo.send_message is the correct method and returns a response object
     response = convo.send_message([{"text": text}])
@@ -211,7 +226,7 @@ def handle_user_input_thread(text):
         subprocess.run(["python", "__main__.py", json.dumps(game_data)])  # Pass game_data as argument
 
     # Append model's response for display
-    convo_history.append({"role": "model", "text": last_response_text})
+    convo_history.append({"role": "model", "text": last_response_text, "color": new_color})
 
 def handle_user_input(text):
     global show_typing_indicator
