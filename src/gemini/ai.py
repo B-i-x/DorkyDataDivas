@@ -42,7 +42,9 @@ light_blue = (220, 240, 255)  # User message color
 gray = (128, 128, 128)  # Gemini model response color
 input_box_color = (230, 230, 230)  # Input box color
 send_button_color = (100, 180, 100)  # Send button color
-font = pygame.font.Font(None, 24)
+
+font_path = "src/assets/Horizon Type - AcherusGrotesque-Regular.otf"
+font = pygame.font.Font(font_path, 20)
 
 # Input box and send button setup
 input_box = pygame.Rect(10, screen_height - 50, screen_width - 80, 40)
