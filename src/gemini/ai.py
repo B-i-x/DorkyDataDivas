@@ -169,41 +169,45 @@ def handle_user_input_thread(text):
         response = convo.send_message([{"text": text}])
         last_response_text = convo.last.text
 
-        # Update display to include the user's message
-        update_display(input_text)
-        
-        # Signal to stop the typing indicator
-        pygame.event.post(pygame.event.Event(TYPING_INDICATOR_STOP))
-
-        # Append model's response for display
-        convo_history.append({"role": "model", "text": last_response_text})
-        pygame.event.post(pygame.event.Event(MESSAGE_RECEIVED_EVENT))
-
-        # Check if the last response matches the specified pattern
-        match = re.match(r'^(\d+),\s*(.*)', last_response_text)
-        if match:
-            # Extract the number and the comma-separated list of words
-            number = int(match.group(1))
-            words = match.group(2).split(', ')
-
-            # Create the JSON object
-            game_data = {"number": number, "words": words}
-
-            # Print the JSON object
-            print(json.dumps(game_data, indent=4))
-
-            # Immediately terminate the program
-            # sys.exit()
-            stop_event.set()
-
-            # Check for the stop event periodically or in an appropriate place in your loop
-        if stop_event.is_set():
-            pygame.quit()
-            break
-    if not text:
-        return
-
+    # Update display to include the user's message
+    update_display(input_text)
     
+    # Signal to stop the typing indicator
+    pygame.event.post(pygame.event.Event(TYPING_INDICATOR_STOP))
+
+    # Check if the last response matches the specified pattern
+    match = re.match(r'^(\d+),\s*(.*)', last_response_text)
+    if match:
+        number = int(match.group(1))
+        raw_words = match.group(2).split(', ')
+        
+        # Process each word according to the updated rules
+        processed_words = []
+        for word in raw_words:
+            # Check if the word contains any letter; if not, skip it
+            if not re.search(r'[a-zA-Z]', word):
+                continue
+            
+            # Convert all letters to lowercase
+            word = word.lower()
+            # Remove text after a hyphen or any special character
+            word = re.sub(r'[-@].*', '', word)  # Adjust to include other special characters as needed
+            # Remove all characters except lowercase letters
+            word = re.sub(r'[^a-z]', '', word)
+            
+            processed_words.append(word)
+        
+        # Create the JSON object with processed words
+        game_data = {"number": number, "words": processed_words}
+        
+        # Print the JSON object
+        print(json.dumps(game_data, indent=4))
+        
+        os._exit(0)
+    
+    # Append model's response for display
+    convo_history.append({"role": "model", "text": last_response_text})
+    pygame.event.post(pygame.event.Event(MESSAGE_RECEIVED_EVENT))
 
 
 def handle_user_input(text):
@@ -213,7 +217,8 @@ def handle_user_input(text):
     pygame.event.post(pygame.event.Event(pygame.USEREVENT, {}))
     input_thread = threading.Thread(target=handle_user_input_thread, args=(text,), daemon=True)
     input_thread.start()
-    return input_thread  # You may want to keep a reference to the thread
+
+
 # Main event loop
 running = True
 key_down = None
