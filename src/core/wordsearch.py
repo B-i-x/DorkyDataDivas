@@ -217,7 +217,7 @@ def word_search(words):
 
         # Now draw the text on the actual screen
         add_text(words, start_x, start_y, strikethrough, selected_word, surface=screen)
-        add_rect(start_x, start_y, height_of_words)
+        add_rect(start_x, start_y, height_of_words*1.15)
 
     # Modify the add_text function signature to accept a `surface` parameter, allowing us to draw on different surfaces
     def add_text(words, start_x, start_y, strikethrough, selected_word, surface):
