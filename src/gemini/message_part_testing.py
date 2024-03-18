@@ -6,6 +6,7 @@ import pygame
 import textwrap
 import time
 import re
+import threading
 import google.generativeai as genai
 
 # Initialize Pygame
@@ -34,6 +35,11 @@ last_cursor_blink_time = time.time()
 
 scroll_y = 0  # This will keep track of the vertical scroll position
 max_message_height = screen_height - 150  # Maximum height for displaying messages above the input box
+
+show_typing_indicator = False #for the ai typing fake out
+typing_indicator_last_update = time.time()
+typing_indicator_state = 0  # This will cycle from 0 to 3
+
 
 # Configure the API
 genai.configure(api_key="AIzaSyCqoLt9Mxq3KHB3Pwdmuy0OQJlpQ_g98_4")
@@ -83,122 +89,124 @@ active = True  # Input box is initially active
 
 convo_history = []  # List to hold conversation history
 
+def draw_message_bubble(text, x, y, is_user_message, is_typing_indicator=False):
+    padding = 10
+    color = light_blue if is_user_message else gray
+    
+    max_width = screen_width // 2 - padding * 2
+    wrapped_text = [text] if is_typing_indicator else textwrap.wrap(text, width=(max_width // font.size('A')[0]) - 1)
+    
+    bubble_width = max(font.size(line)[0] for line in wrapped_text) + padding * 2
+    bubble_height = sum(font.size(line)[1] for line in wrapped_text) + padding * 2
+    
+    bubble_width = min(bubble_width, max_width)
+    bubble_x = screen_width - bubble_width - x - padding if is_user_message else x
+    
+    pygame.draw.rect(screen, color, (bubble_x, y, bubble_width, bubble_height), border_radius=20)
+    
+    y_offset = y + padding
+    for line in wrapped_text:
+        line_surface = font.render(line, True, black)
+        screen.blit(line_surface, (bubble_x + padding, y_offset))
+        y_offset += font.size(line)[1]
+    
+    return bubble_height
+
 def update_display(input_text):
-    global cursor_visible, last_cursor_blink_time, convo_history, scroll_y
+    global cursor_visible, last_cursor_blink_time, convo_history, scroll_y, show_typing_indicator, typing_indicator_last_update, typing_indicator_state
     screen.fill(white)
-
-    total_height = 10  # Start with padding from the top
-
-    def draw_message_bubble(text, x, y, is_user_message):
-        color = light_blue if is_user_message else gray
-        padding = 10
-
-        if not is_user_message:
-            bold_texts = re.findall(r'\*\*(.*?)\*\*', text)
-            italic_texts = re.findall(r'\*(.*?)\*', text)
-            for b_text in bold_texts:
-                text = text.replace(f"**{b_text}**", b_text)
-            for i_text in italic_texts:
-                text = text.replace(f"*{i_text}*", i_text)
-
-        # Calculate max width (user messages use half the screen, response messages use half width)
-        max_width = screen_width // 2 - padding * 2 if is_user_message else screen_width // 2 - padding * 2
-
-        # Aggressive text wrapping
-        wrapped_text = textwrap.wrap(text, width=(max_width // font.size('A')[0]) - 1)
-
-        bubble_height = sum(font.size(line)[1] for line in wrapped_text) + padding * 2
-        bubble_width = max(font.size(line)[0] for line in wrapped_text) + padding * 2
-
-        # Ensure bubble doesn't exceed its half of the screen
-        bubble_width = min(bubble_width, max_width)
-
-        # Position bubble near the right edge for user messages
-        bubble_x = screen_width - bubble_width - x - padding if is_user_message else x
-
-        pygame.draw.rect(screen, color, (bubble_x, y, bubble_width, bubble_height), border_radius=20)
-
-        y_offset = y + padding
-        for i, line in enumerate(wrapped_text):
-            line_surface = font.render(line, True, black)
-
-            # Right-align first line for user messages
-            if is_user_message and i == 0:
-                text_x = screen_width - bubble_width - x  # Stick to the right edge
-            else:
-                # Left-align other lines
-                text_x = bubble_x + padding
-
-            screen.blit(line_surface, (text_x, y_offset))
-            y_offset += font.size(line)[1]
-
-        return bubble_height
 
     y_pos = 10 + scroll_y
     for message in convo_history:
         is_user_message = message["role"] == "user"
         text = message["text"]
-        y_pos += draw_message_bubble(text, 10, y_pos, is_user_message) + 10
+        bubble_height = draw_message_bubble(text, 10, y_pos, is_user_message)
+        y_pos += bubble_height + 10
 
     pygame.draw.rect(screen, input_box_color, input_box, border_radius=5)
-    # Update display
-        # Track input length
-    input_length = len(input_text)
-
-    # Enforce the limit
-    if input_length > 100:
-        input_text = input_text[:100]  # Truncate input if exceeding limit
     text_surface = font.render(input_text, True, black)
     screen.blit(text_surface, (input_box.x + 10, input_box.y + 10))
 
-    if time.time() - last_cursor_blink_time > 0.5:
-        cursor_visible = not cursor_visible
-        last_cursor_blink_time = time.time()
     if cursor_visible:
-        cursor = pygame.Rect(input_box.x + 10 + text_surface.get_width(), input_box.y + 10, 2, text_surface.get_height())
-        pygame.draw.rect(screen, black, cursor)
+        cursor_blink_time = time.time()
+        if cursor_blink_time - last_cursor_blink_time > 0.5:
+            cursor_visible = not cursor_visible
+            last_cursor_blink_time = cursor_blink_time
+        if cursor_visible:
+            cursor = pygame.Rect(input_box.x + 10 + text_surface.get_width(), input_box.y + 10, 2, text_surface.get_height())
+            pygame.draw.rect(screen, black, cursor)
 
-    pygame.draw.polygon(screen, send_button_color, [(send_button.x + 10, send_button.y + 10), (send_button.x + 40, send_button.y + 20), (send_button.x + 10, send_button.y + 30)], 0)
+    if show_typing_indicator:
+        typing_texts = ["", ".", "..", "..."]
+        typing_text = typing_texts[typing_indicator_state]
+        if typing_text:
+            # You might need to adjust y_pos based on your specific UI layout
+            typing_y_pos = screen_height - input_box.height - 50  # Adjust y_pos for typing indicator
+            draw_message_bubble(typing_text, 10, typing_y_pos, False, is_typing_indicator=True)
 
     pygame.display.flip()
 
+def handle_user_input_thread(text):
+    global convo_history, show_typing_indicator
+    if not text:
+        return
+
+    # Append user's message immediately for display
+    convo_history.append({"role": "user", "text": text})
+    pygame.event.post(pygame.event.Event(pygame.USEREVENT, {}))  # Trigger an update
+    
+    # Simulate sending a message and receiving a response
+    time.sleep(2)  # Simulate delay for response
+    last_response_text = "Simulated response to: " + text  # Placeholder for an actual response
+
+    # Append model's response for display
+    convo_history.append({"role": "model", "text": last_response_text})
+    pygame.event.post(pygame.event.Event(pygame.USEREVENT, {}))  # Trigger an update
+
+    show_typing_indicator = False  # Stop showing the typing indicator
 
 def handle_user_input(text):
-    global convo_history
-    if not text:
-        return  # Do nothing if text is empty
+    global show_typing_indicator
+    show_typing_indicator = True
+    threading.Thread(target=handle_user_input_thread, args=(text,)).start()
 
-    message = [{"text": text}]  # Message format
-
-    convo_history.append({"role": "user", "text": text})
-    response = convo.send_message(message)
-    last_response_text = convo.last.text
-    convo_history.append({"role": "model", "text": last_response_text})
-    update_display(input_text)
 
 # Main event loop
 running = True
 while running:
+    current_time = time.time()
+    
+    # Update typing indicator state based on time
+    if show_typing_indicator and (current_time - typing_indicator_last_update > 0.5):
+        typing_indicator_state = (typing_indicator_state + 1) % 4
+        typing_indicator_last_update = current_time
+        update_display(input_text)  # Update display to show the typing indicator
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            # Check if the click is on the send button and there's text to send
-            if send_button.collidepoint(event.pos) and input_text != '':
+            if send_button.collidepoint(event.pos) and input_text:
                 handle_user_input(input_text)
-                input_text = ''
-        # Keep the rest of the event handling as is
+                input_text = ''  # Clear the input text after sending
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_RETURN and input_text != '':
+            if event.key == pygame.K_RETURN and input_text:
                 handle_user_input(input_text)
-                input_text = ''
+                input_text = ''  # Clear the input text after sending
             elif event.key == pygame.K_BACKSPACE:
                 input_text = input_text[:-1]
             else:
-                input_text += event.unicode
+                if not pygame.key.get_mods() & pygame.KMOD_CTRL:
+                    input_text += event.unicode
         elif event.type == pygame.MOUSEWHEEL:
             scroll_y += event.y * 30
 
-    update_display(input_text)
+    # Continuously update the display outside of typing indicator logic
+    # to ensure all elements are updated appropriately.
+    if not show_typing_indicator:
+        update_display(input_text)
+
+    pygame.time.wait(20)
+
 
 pygame.quit()
