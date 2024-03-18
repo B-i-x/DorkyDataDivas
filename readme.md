@@ -14,6 +14,10 @@ pip install gitpython
 
 pip install google-generativeai
 
+pip install PyQt5
+
+pip install enum
+
 to run the game, go to src->__main__.py
 
 enjoy!
