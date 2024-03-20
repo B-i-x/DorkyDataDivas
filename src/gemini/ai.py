@@ -63,7 +63,7 @@ pygame.init()
 screen_width = 800
 screen_height = 600
 screen = pygame.display.set_mode((screen_width, screen_height))
-pygame.display.set_caption("Gemini Chat Interface")
+pygame.display.set_caption("Generative Word Search Game")
 
 # Custom event IDs
 MESSAGE_RECEIVED_EVENT = pygame.USEREVENT + 1
@@ -174,42 +174,46 @@ import textwrap
 def calculate_message_bubble_height(text, is_user_message, is_typing_indicator=False):
     padding = 10
     max_width = screen_width // 2 - padding * 2
-    # Determine text wrapping based on whether it's a typing indicator or not
     wrapped_text = [text] if is_typing_indicator else textwrap.wrap(text, width=(max_width // font.size('A')[0]) - 1)
 
-    # Calculate the bubble height
     bubble_height = sum(font.size(line)[1] for line in wrapped_text) + padding * 2
 
-    # Adjust bubble_height if it's a typing indicator (e.g., reduce height or any other specific adjustment)
     if is_typing_indicator:
-        # Example adjustment: reduce height by a certain factor, or set to a specific value
-        # Adjust as needed for your typing indicator's appearance
         bubble_height -= padding  # Example adjustment, modify as needed
 
     return bubble_height
+
 def update_display(input_text):
     global cursor_visible, last_cursor_blink_time, convo_history, scroll_y, show_typing_indicator, typing_indicator_last_update, typing_indicator_state
     MAIN_BACKGROUND_COLOR = pygame.Color(246, 239, 238)
     screen.fill(MAIN_BACKGROUND_COLOR)
-    y_pos = 10 + scroll_y
-
-    # Calculate the total height needed for the messages
+    y_pos = 10  # Start from the top
     total_height = 0
+    display_height = screen.get_height()  # Assuming 'screen' is your pygame display surface
+
+    # Calculate the total height needed for the messages including user and model
     for message in convo_history:
         is_user_message = message["role"] == "user"
         text = message["text"]
-        message_height = calculate_message_bubble_height(text, is_user_message) + 10
-        total_height += message_height
+        message_height = calculate_message_bubble_height(text, is_user_message)
+        total_height += message_height + 10  # Additional 10 for spacing between messages
 
     # Include the typing indicator height in the total height calculation
     if show_typing_indicator:
         typing_indicator_height = calculate_message_bubble_height("...", False, True)
-        # Adjust the total height to include the typing indicator
-        total_height += typing_indicator_height + 10  # Include margin
+        total_height += typing_indicator_height + 10  # Include margin for typing indicator
 
-    # Adjust scroll_y if the total height of messages (including typing indicator) goes beyond the bottom input box
-    if total_height + y_pos > screen_height - input_box.height - 20:
-        scroll_y -= (total_height + y_pos) - (screen_height - input_box.height - 20)
+
+    # Adjust scroll_y to prevent scrolling past the top of the first message
+    if y_pos + scroll_y > 0:
+        scroll_y = -y_pos
+
+    # Calculate the maximum scroll value to prevent scrolling past the bottom
+    max_scroll = display_height - total_height - y_pos - input_box.height
+    if scroll_y < max_scroll:
+        scroll_y = max_scroll
+
+
 
     # Reset y_pos after adjusting scroll_y for actual drawing
     y_pos = 10 + scroll_y
@@ -242,28 +246,38 @@ def update_display(input_text):
     if show_typing_indicator:
         typing_texts = ["", ".", "..", "..."]
         typing_text = typing_texts[typing_indicator_state]
-        typing_y_pos = y_pos  # Position for the typing indicator
+        typing_y_pos = y_pos - 20  # Position for the typing indicator.
+        scroll_y -= (total_height + y_pos) - (screen_height - input_box.height - 20)
         draw_message_bubble(typing_text, 10, typing_y_pos, color, False, is_typing_indicator=True)
+
 
     pygame.display.flip()
 
 
 
 def handle_user_input_thread(text):
-    global convo_history
+    global convo_history, scroll_y
     if not text:
         return
 
     # Append user's message immediately for display
     convo_history.append({"role": "user", "text": text})
+    total_height = 50 + sum(calculate_message_bubble_height(msg["text"], msg["role"] == "model") for msg in convo_history) + sum(calculate_message_bubble_height(msg["text"], msg["role"] == "user") for msg in convo_history)
+
+    display_height = screen_height - input_box.height - 20  # Adjust for input box and padding
+
+    if total_height > display_height:
+        scroll_y = display_height - total_height  # Adjust scroll_y to show the latest message
+
+    update_display(input_text)
 
     pygame.event.post(pygame.event.Event(MESSAGE_RECEIVED_EVENT))
     new_color = generate_pastel_color()
     # Send the message to the model and wait for the response
     # Assuming convo.send_message is the correct method and returns a response object
     response = convo.send_message([{"text": text}])
+    
     last_response_text = convo.last.text
-    update_display(input_text)
     
     # Signal to stop the typing indicator
     pygame.event.post(pygame.event.Event(TYPING_INDICATOR_STOP))
@@ -304,9 +318,19 @@ def handle_user_input_thread(text):
 
         # Execute subprocess after Pygame window closes
         subprocess.run(["python", "src\core\wordsearch.py", json.dumps(game_data)])  # Pass game_data as argument
-
+    # Calculate if autoscroll is needed
+    
     # Append model's response for display
     convo_history.append({"role": "model", "text": last_response_text, "color": new_color})
+
+    total_height = 50 + sum(calculate_message_bubble_height(msg["text"], msg["role"] == "model") for msg in convo_history) + sum(calculate_message_bubble_height(msg["text"], msg["role"] == "user") for msg in convo_history)
+
+    display_height = screen_height - input_box.height - 20  # Adjust for input box and padding
+
+    if total_height > display_height:
+        scroll_y = display_height - total_height  # Adjust scroll_y to show the latest message
+
+    update_display(input_text)
 
 def handle_user_input(text):
     global show_typing_indicator
@@ -352,7 +376,7 @@ while running:
     # Handle continuous backspace while the key is held down
     if key_down == pygame.K_BACKSPACE and input_text:
         input_text = input_text[:-1]
-        time.sleep(0.1)  # Control the rate of backspace deletion
+        time.sleep(0.15)  # Control the rate of backspace deletion
 
     # Typing indicator state update based on time
     if show_typing_indicator:
