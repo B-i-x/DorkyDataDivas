@@ -1,13 +1,17 @@
-# Instructions
+#Generative Word Search Game
 
-once your terminal is in the root directory, aka. DorkyDataDivas directory
+This game merges the classic word search experience with generative AI technology, leveraging Google Gemini to dynamically set themes as well as the number of words in the puzzle according to user inputs. It was developed as part of HackUA 2024. 
+## Prerequisites
 
-you can just install everything by running
+Once your terminal is in the root directory, aka. DorkyDataDivas directory, you can install everything by running:
 
+```
 pip install generative-word-search
+```
 
-or you can just install each one manually here
+or you can just install each dependency manually as follows:
 
+```
 pip install pygame word-search-generator
 
 pip install word-search-generator
@@ -19,20 +23,21 @@ pip install google-generativeai
 pip install PyQt5
 
 pip install enum
+```
 
-to run the game, go to src->__main__.py
+To run the game, go to src->__main__.py
 
-enjoy!
+Enjoy!
 
 ## Cool Notes
 
 **Greedy Algorithm**
 
-we developed a custom greedy algorithm to find the minimum size of the word search grid
+We developed a custom greedy algorithm to find the minimum size of the word search grid
 
 it is src->algo->greedy.py
 
-we tested this algorithm exhaustively in order to make sure that it was as good if not better than the word search package we were using.
+We tested this algorithm exhaustively in order to make sure that it was as good if not better than the word search package we were using.
 
 Our algorithim performed better than the word search package overall but not in a predictable way because the word search package used some randomness
 
