@@ -1,4 +1,4 @@
-#Generative Word Search Game
+# Generative Word Search Game
 
 This game merges the classic word search experience with generative AI technology, leveraging Google Gemini to dynamically set themes as well as the number of words in the puzzle according to user inputs. It was developed as part of HackUA 2024. 
 ## Prerequisites
